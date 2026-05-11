@@ -1,0 +1,2996 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kensinger Clicker</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #f0f0f0; }
+
+#app { display: flex; height: 100vh; position: relative; z-index: 2; }
+
+/* ── LEFT: Sprite Panel ─────────────────────────────────── */
+#sprite-panel {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Score pinned to top of sprite panel */
+#score-text {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+#multiplier-notice {
+  position: absolute;
+  top: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: gold;
+  font-weight: bold;
+  font-size: 15px;
+  text-shadow: 1px 1px 2px #000;
+  display: none;
+  z-index: 110;
+  white-space: nowrap;
+}
+#perm-multiplier-notice {
+  position: absolute;
+  top: 66px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #7c4dff;
+  font-weight: bold;
+  font-size: 15px;
+  text-shadow: 1px 1px 2px #000;
+  display: none;
+  z-index: 110;
+  white-space: nowrap;
+}
+
+@keyframes rockingMotion {
+  0%   { transform: rotate(-15deg); }
+  50%  { transform: rotate(15deg); }
+  100% { transform: rotate(-15deg); }
+}
+.sprite-wrapper {
+  animation: rockingMotion 4s ease-in-out infinite;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5; position: relative;
+}
+#kensinger-sprite {
+  width: 200px; height: auto;
+  cursor: pointer; border-radius: 15px;
+  transition: transform 0.05s ease-in-out;
+}
+#kensinger-sprite:active, #kensinger-sprite.active-scale { transform: scale(0.92) !important; }
+
+.special-kensinger { position: fixed; height: auto; cursor: pointer; z-index: 100; }
+.size-gold  { width: 80px; }
+.size-green { width: 60px; }
+.gold-filter  { filter: drop-shadow(0 0 10px gold) sepia(1) saturate(5) hue-rotate(-10deg); }
+.green-filter { filter: drop-shadow(0 0 10px #00ff00) hue-rotate(90deg) saturate(3); }
+
+.adkins-orbiter {
+  position: fixed; border-radius: 50%; object-fit: cover;
+  border: 1.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.5s;
+}
+
+/* ── RIGHT: Side Panel ───────────────────────────────────── */
+#side-panel {
+  width: 320px; min-width: 280px;
+  display: flex; flex-direction: column;
+  background: #fff;
+  border-left: 1px solid #e0e0e0;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+
+/* ── Upgrades Bar ─────────────────────────────────────────── */
+#upgrades-bar {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+}
+#upgrades-bar h4 {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #999; margin-bottom: 8px;
+}
+#upgrades-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.up-btn {
+  width: 42px; height: 42px; cursor: pointer;
+  background: #f9f9f9; border: 2px solid #eee;
+  border-radius: 10px; display: none;
+  align-items: center; justify-content: center;
+  transition: transform 0.1s, border-color 0.2s;
+  position: relative; font-size: 20px;
+}
+.up-btn:active:not(:disabled) { transform: scale(0.88); }
+.up-btn:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); border-color: #eee !important; }
+.bair-upgrade-art { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: block; }
+@keyframes unlockPulse {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,215,0,0.4); }
+  50%  { transform: scale(1.06); box-shadow: 0 0 8px 2px rgba(255,215,0,0.6); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,215,0,0.4); }
+}
+.up-btn.pulsing { animation: unlockPulse 1.5s infinite; border-color: gold !important; }
+
+#up-tooltip {
+  position: fixed; background: rgba(255,255,255,0.98);
+  border: 2px solid gold; border-radius: 12px; padding: 10px 14px;
+  font-size: 12px; color: #222; text-align: center;
+  pointer-events: none; display: none; z-index: 100005;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12); width: 160px;
+}
+#up-tooltip .tt-name  { font-weight: bold; color: #b8860b; font-size: 13px; display: block; margin-bottom: 4px; }
+#up-tooltip .tt-price { font-weight: bold; color: #d9534f; margin-top: 8px; display: block; }
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+#tab-bar { display: flex; border-bottom: 1px solid #eee; background: #fafafa; }
+.tab-btn {
+  flex: 1; padding: 9px 0; font-size: 12px; font-weight: bold;
+  border: none; background: transparent; cursor: pointer;
+  color: #999; border-bottom: 3px solid transparent; transition: 0.15s;
+}
+.tab-btn.active { color: #333; border-bottom-color: #333; background: #fff; }
+
+.tab-content { display: none; flex-direction: column; overflow-y: auto; flex: 1; }
+.tab-content.active { display: flex; }
+
+/* ── Shop Tab ─────────────────────────────────────────────── */
+#shop-tab { padding: 10px; gap: 6px; }
+#shop-stats { font-size: 12px; color: #888; text-align: center; padding: 4px 0 6px; }
+
+.buy-toggle-row { display: flex; gap: 4px; justify-content: center; margin-bottom: 4px; }
+.toggle-btn {
+  padding: 6px 13px; font-size: 11px; font-weight: bold;
+  border: none; border-radius: 10px; cursor: pointer;
+  background: #eee; color: #555; transition: 0.15s;
+}
+.toggle-btn.active { background: #333; color: #fff; }
+
+.shop-btn {
+  padding: 12px 14px; font-weight: bold; cursor: pointer;
+  background: #f8f8f8; border: 2px solid #ddd; border-radius: 13px;
+  font-size: 13px; width: 100%;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: transform 0.05s, border-color 0.15s; text-align: left;
+}
+.shop-btn:hover:not(:disabled) { border-color: #aaa; }
+.shop-btn:active:not(:disabled) { transform: scale(0.97) translateY(1px); }
+.shop-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.shop-btn .btn-label { display: flex; flex-direction: column; gap: 2px; }
+.shop-btn .btn-sub   { font-size: 10px; color: #999; font-weight: normal; }
+.price-tag { color: #d32f2f; font-family: monospace; white-space: nowrap; }
+
+/* ── Codes Tab ────────────────────────────────────────────── */
+#codes-tab { padding: 20px 16px; align-items: center; gap: 10px; }
+#codes-tab h3 { font-size: 16px; color: #333; }
+#code-input {
+  width: 100%; padding: 10px; border: 2px solid #eee; border-radius: 10px;
+  outline: none; text-align: center; font-weight: bold;
+  text-transform: uppercase; font-size: 14px; transition: border-color 0.2s;
+}
+#code-input:focus { border-color: #333; }
+#redeem-btn {
+  width: 100%; padding: 10px; background: #333; color: #fff;
+  border: none; border-radius: 10px; cursor: pointer;
+  font-weight: bold; font-size: 14px; transition: transform 0.05s;
+}
+#redeem-btn:active { transform: scale(0.98); }
+#code-msg { font-size: 12px; font-weight: bold; min-height: 16px; }
+.msg-ok  { color: #2e7d32; }
+.msg-err { color: #d32f2f; }
+
+/* ── Save Tab ─────────────────────────────────────────────── */
+#save-tab { padding: 16px; align-items: center; gap: 10px; }
+#save-tab h3 { font-size: 15px; color: #333; }
+#save-tab p  { font-size: 11px; color: #888; text-align: center; line-height: 1.5; }
+.save-btn {
+  width: 100%; padding: 10px; border: none; border-radius: 10px;
+  cursor: pointer; font-weight: bold; font-size: 13px;
+  transition: transform 0.05s, opacity 0.15s;
+}
+.save-btn:active { transform: scale(0.98); }
+#btn-export { background: #1976d2; color: #fff; }
+#btn-import { background: #388e3c; color: #fff; }
+#btn-reset  { background: #d32f2f; color: #fff; }
+#import-area {
+  width: 100%; height: 70px; border: 2px solid #eee; border-radius: 10px;
+  padding: 8px; font-size: 11px; resize: none; outline: none;
+  transition: border-color 0.2s;
+}
+#import-area:focus { border-color: #333; }
+#save-msg { font-size: 12px; font-weight: bold; min-height: 16px; }
+#reset-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; }
+#reset-modal.open { display:flex; }
+#reset-box { background:#fff; border-radius:16px; padding:28px 24px; max-width:300px; width:90%; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+#reset-box h3 { margin-bottom:10px; color:#d32f2f; font-size:19px; }
+#reset-box p  { font-size:13px; color:#555; margin-bottom:20px; line-height:1.6; }
+.reset-row    { display:flex; gap:10px; justify-content:center; }
+.reset-row button { padding:10px 20px; border:none; border-radius:10px; font-weight:bold; cursor:pointer; font-size:13px; transition:transform 0.08s; }
+.reset-row button:active { transform:scale(0.96); }
+#reset-confirm { background:#d32f2f; color:#fff; }
+#reset-cancel  { background:#e0e0e0; color:#333; }
+
+/* ── Theme / Settings ────────────────────────────────────── */
+body.theme-dark { background: #15171c; color: #f2f4f8; }
+body.theme-dark #side-panel { background: #20242c; border-left-color: #363c47; box-shadow: -4px 0 16px rgba(0,0,0,0.28); }
+body.theme-dark #sprite-panel { background: #15171c; }
+body.theme-dark #score-text { color: #f2f4f8; }
+body.theme-dark #upgrades-bar,
+body.theme-dark #tab-bar { background: #1b1f27; border-color: #343a45; }
+body.theme-dark .tab-btn { color: #9ca6b6; }
+body.theme-dark .tab-btn.active { color: #f2f4f8; border-bottom-color: #f2f4f8; background: #20242c; }
+body.theme-dark #shop-stats { color: #aab2bf; }
+body.theme-dark .toggle-btn { background: #343a45; color: #d8dde6; }
+body.theme-dark .toggle-btn.active { background: #f2f4f8; color: #15171c; }
+body.theme-dark .shop-btn { background: #2a303a; border-color: #3d4552; color: #f2f4f8; }
+body.theme-dark .shop-btn:hover:not(:disabled) { border-color: #8d98aa; }
+body.theme-dark .shop-btn .btn-sub { color: #aab2bf; }
+body.theme-dark .price-tag { color: #ff8a80; }
+.shop-btn.maxed { order: 100; }
+#settings-tab { padding: 16px; gap: 16px; }
+.settings-section { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.settings-section + .settings-section { border-top: 1px solid #eee; padding-top: 16px; }
+.settings-section h3 { font-size: 15px; color: #333; }
+.settings-section p  { font-size: 11px; color: #888; text-align: center; line-height: 1.5; }
+.theme-row { display: flex; gap: 6px; justify-content: center; width: 100%; }
+.theme-btn {
+  flex: 1; padding: 9px 10px; font-size: 12px; font-weight: bold;
+  border: 2px solid #eee; border-radius: 10px; cursor: pointer;
+  background: #f8f8f8; color: #555; transition: 0.15s;
+}
+.theme-btn.active { background: #333; border-color: #333; color: #fff; }
+body.theme-dark .settings-section + .settings-section { border-top-color: #343a45; }
+body.theme-dark .settings-section h3 { color: #f2f4f8; }
+body.theme-dark .settings-section p { color: #aab2bf; }
+body.theme-dark .theme-btn { background: #2a303a; border-color: #3d4552; color: #d8dde6; }
+body.theme-dark .theme-btn.active { background: #f2f4f8; border-color: #f2f4f8; color: #15171c; }
+body.theme-dark #code-input,
+body.theme-dark #import-area { background: #15171c; border-color: #3d4552; color: #f2f4f8; }
+body.theme-dark #code-input:focus,
+body.theme-dark #import-area:focus { border-color: #f2f4f8; }
+body.theme-dark #redeem-btn { background: #f2f4f8; color: #15171c; }
+body.theme-dark #reset-box { background:#20242c; color:#f2f4f8; }
+body.theme-dark #reset-box p { color:#d8dde6; }
+body.theme-dark #reset-cancel { background:#343a45; color:#f2f4f8; }
+
+/* ── Todd Sword Farm ─────────────────────────────────────── */
+#farm-panel {
+  position: absolute; left: 12px; top: 78px; z-index: 80;
+  width: 286px; max-height: calc(100vh - 96px);
+  background: rgba(255,255,255,0.96); border: 2px solid #e2e6d8;
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden; transition: width 0.18s, max-height 0.18s;
+  display: none;
+}
+#farm-panel.unlocked { display: block; }
+#farm-panel.collapsed { width: 46px; max-height: 46px; }
+#farm-toggle {
+  width: 42px; height: 42px; border: none; background: #edf7dd;
+  cursor: pointer; font-size: 20px; font-weight: bold;
+}
+#farm-ready-badge {
+  position: absolute; top: 4px; right: 4px; min-width: 17px; height: 17px;
+  border-radius: 999px; background: #d32f2f; color: #fff; font-size: 10px;
+  display: none; align-items: center; justify-content: center; font-weight: bold;
+}
+#farm-ready-badge.show { display: flex; }
+#farm-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+#farm-panel.collapsed #farm-body { display: none; }
+#farm-title { font-size: 13px; font-weight: bold; color: #31421f; }
+#farm-status, #farm-notice { font-size: 11px; color: #66705c; line-height: 1.35; }
+#farm-notice { min-height: 15px; font-weight: bold; color: #2e7d32; }
+.farm-tabs { display: flex; gap: 4px; }
+.farm-tab-btn {
+  flex: 1; padding: 7px; border: none; border-radius: 8px; cursor: pointer;
+  background: #e9f2dc; color: #465735; font-size: 11px; font-weight: bold;
+}
+.farm-tab-btn.active { background: #31421f; color: #fff; }
+.farm-view { display: none; flex-direction: column; gap: 8px; }
+.farm-view.active { display: flex; }
+#crop-picker { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; }
+.crop-btn {
+  min-height: 46px; padding: 7px; border: 2px solid #dfe8cf; border-radius: 10px;
+  background: #f7fbef; color: #334322; cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; gap: 2px; font-weight: bold; font-size: 12px;
+}
+.crop-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.crop-btn.active { border-color: #f6c343; box-shadow: 0 0 0 2px rgba(246,195,67,0.25); }
+.crop-sub { font-size: 10px; color: #748065; font-weight: normal; }
+#farm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.farm-plot {
+  aspect-ratio: 1; border: 2px solid #dfe8cf; border-radius: 10px;
+  background: #f7fbef; cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px; color: #334322;
+  position: relative; min-width: 0;
+}
+.farm-plot.empty::after { content: '+'; font-size: 18px; color: #9aa889; }
+.plot-icon { font-size: 24px; line-height: 1; }
+.plot-time { font-size: 10px; font-weight: bold; color: #66705c; }
+.farm-plot.ready { border-color: #f6c343; box-shadow: 0 0 0 2px rgba(246,195,67,0.25); }
+.farm-plot.ready .plot-time { color: #2e7d32; }
+.farm-plot.bred { border-style: dashed; }
+#recipe-list { display: flex; flex-direction: column; gap: 6px; }
+.recipe-card {
+  padding: 8px; border-radius: 10px; background: #fff; border: 1px solid #e5ecd8;
+  font-size: 11px; color: #334322; line-height: 1.35;
+}
+.recipe-card.locked { opacity: 0.55; }
+body.theme-dark #farm-panel { background: rgba(32,36,44,0.97); border-color: #3d4552; box-shadow: 0 8px 24px rgba(0,0,0,0.32); }
+body.theme-dark #farm-toggle { background: #334028; color: #f2f4f8; }
+body.theme-dark #farm-title, body.theme-dark .farm-plot, body.theme-dark .recipe-card { color: #f2f4f8; }
+body.theme-dark #farm-status, body.theme-dark .crop-sub, body.theme-dark .plot-time { color: #aab2bf; }
+body.theme-dark .farm-tab-btn { background: #263020; color: #d8dde6; }
+body.theme-dark .farm-tab-btn.active { background: #f2f4f8; color: #15171c; }
+body.theme-dark .crop-btn, body.theme-dark .farm-plot { background: #263020; border-color: #3f4c35; color: #f2f4f8; }
+body.theme-dark .recipe-card { background: #2a303a; border-color: #3d4552; }
+.crop-btn { user-select: none; }
+.crop-btn[draggable="true"] { cursor: grab; }
+.crop-btn[draggable="true"]:active { cursor: grabbing; }
+.crop-btn.hidden-crop { display: none; }
+.farm-plot.drop-target { border-color: #2e7d32; box-shadow: 0 0 0 2px rgba(46,125,50,0.22); }
+.setting-toggle-row { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.setting-toggle { width: 100%; padding: 9px 10px; border: 2px solid #eee; border-radius: 10px; background: #f8f8f8; color: #555; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+.setting-toggle.active { background: #333; border-color: #333; color: #fff; }
+body.theme-dark .setting-toggle { background: #2a303a; border-color: #3d4552; color: #d8dde6; }
+body.theme-dark .setting-toggle.active { background: #f2f4f8; border-color: #f2f4f8; color: #15171c; }
+#dev-mode-badge {
+  position: fixed; top: 10px; left: 10px; z-index: 100000;
+  padding: 6px 9px; border-radius: 8px; background: #d32f2f; color: #fff;
+  font-size: 11px; font-weight: 900; letter-spacing: 0.05em; display: none;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.22);
+}
+#dev-mode-badge.active { display: block; }
+#dev-section { display: none; }
+#dev-section.active { display: flex; }
+#dev-panel {
+  position: absolute; left: 12px; bottom: 12px; z-index: 80;
+  width: 260px; max-height: calc(100vh - 100px);
+  background: rgba(255,255,255,0.97); border: 2px solid #f0c0c0;
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  overflow: hidden; transition: width 0.18s, max-height 0.18s;
+  display: none;
+}
+#dev-panel.active { display: block; }
+#dev-panel.collapsed { width: 42px; max-height: 42px; }
+#dev-toggle {
+  width: 38px; height: 38px; border: none; background: #fde8e8;
+  cursor: pointer; font-size: 18px; font-weight: bold; border-radius: 8px;
+}
+#dev-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+#dev-panel.collapsed #dev-body { display: none; }
+#dev-body h4 { font-size: 12px; font-weight: bold; color: #b71c1c; margin: 0; }
+.dev-grid { width: 100%; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; }
+.dev-input { width: 100%; padding: 7px; border: 2px solid #eee; border-radius: 8px; font-weight: bold; font-size: 12px; }
+.dev-btn { padding: 7px; border: none; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; background: #333; color: #fff; }
+body.theme-dark #dev-panel { background: rgba(32,20,20,0.97); border-color: #7a2020; }
+body.theme-dark #dev-toggle { background: #3a1a1a; color: #f2f4f8; }
+body.theme-dark #dev-body h4 { color: #ff8a80; }
+body.theme-dark .dev-input { background: #15171c; border-color: #3d4552; color: #f2f4f8; }
+body.theme-dark .dev-btn { background: #f2f4f8; color: #15171c; }
+.dev-grid { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; }
+.dev-input { width: 100%; padding: 9px; border: 2px solid #eee; border-radius: 10px; font-weight: bold; }
+.dev-btn { padding: 9px; border: none; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; background: #333; color: #fff; }
+body.theme-dark .dev-input { background:#15171c; border-color:#3d4552; color:#f2f4f8; }
+body.theme-dark .dev-btn { background:#f2f4f8; color:#15171c; }
+#notice-stack { position: fixed; right: 18px; bottom: 18px; z-index: 99999; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; justify-content: flex-end; pointer-events: none; }
+.notice-card { display:none; width: min(300px, calc(100vw - 36px)); background:#fff; color:#252832; border:1px solid #e6e8ee; border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,0.22); padding:14px; pointer-events:auto; }
+.notice-card.open { display:block; }
+.notice-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.notice-head h3 { margin:0; font-size:15px; color:#252832; }
+.notice-x { width:26px; height:26px; border:none; border-radius:50%; background:#edf0f5; color:#252832; font-weight:bold; cursor:pointer; }
+.notice-card p, .notice-card li { font-size:12px; line-height:1.45; color:#4c5363; }
+.notice-card ul { margin:0 0 10px 18px; padding:0; }
+.notice-card .ver-tag { font-size:11px; color:#7b8292; margin-bottom:8px; }
+body.theme-dark .notice-card { background:#20242c; border-color:#3d4552; color:#d8dde6; }
+body.theme-dark .notice-head h3 { color:#f2f4f8; }
+body.theme-dark .notice-card p, body.theme-dark .notice-card li { color:#c4cad6; }
+body.theme-dark .notice-card .ver-tag { color:#9ca6b6; }
+body.theme-dark .notice-x { background:#343a45; color:#f2f4f8; }
+
+#notice-stack.update-open {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.72);
+  pointer-events: auto;
+}
+#notice-stack.update-open #save-card { display: none; }
+#notice-stack.update-open #update-card {
+  display: block;
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  margin: 0;
+}
+#notice-stack.update-open #update-card .notice-head { margin-bottom: 10px; }
+#notice-stack.update-open #update-card .notice-head h3 { font-size: 18px; }
+#notice-stack.update-open #update-card p,
+#notice-stack.update-open #update-card li { font-size: 13px; }
+
+/* ── Rebirth / Tony / Pepperoni ───────────────────────────── */
+#rebirth-tab { padding: 12px; gap: 10px; overflow-y: auto; }
+#rebirth-summary { font-size: 12px; color: #555; line-height: 1.45; background: #f7f7f7; border: 1px solid #eee; border-radius: 8px; padding: 10px; }
+#rebirth-button { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #171725; color: #fff; font-weight: bold; cursor: pointer; }
+#rebirth-open-tree { width: 100%; padding: 10px 12px; border: 1px solid #cfd3df; border-radius: 8px; background: #fff; color: #171725; font-weight: bold; cursor: pointer; margin-top: 8px; }
+#rebirth-button:disabled { opacity: 0.35; cursor: not-allowed; }
+#rebirth-note { font-size: 12px; line-height: 1.45; color: #666; }
+#rebirth-tree { position: relative; width: 820px; height: 650px; min-width: 820px; margin: 0 auto; overflow: visible; z-index: 3; }
+.rebirth-node { position: absolute; width: 82px; height: 82px; border-radius: 50%; border: 2px solid #8f95ff; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.96), rgba(210,216,255,0.92)); color: #171725; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 9px; line-height: 1.05; font-weight: bold; text-align: center; cursor: pointer; padding: 5px; box-shadow: 0 0 18px rgba(130,150,255,0.36); z-index: 4; pointer-events: auto; }
+.rebirth-node .node-icon { font-size: 20px; line-height: 1; }
+.rebirth-node:hover:not(.locked) { transform: scale(1.04); }
+.rebirth-node.locked { opacity: 0.42; filter: grayscale(1); cursor: not-allowed; }
+.rebirth-node.bought { border-color: gold; box-shadow: 0 0 18px rgba(255,215,0,0.45); }
+.rebirth-line { position: absolute; height: 2px; background: rgba(255,255,255,0.32); transform-origin: 0 50%; z-index: 1; pointer-events: none; }
+#rebirth-screen { display:none; position: fixed; inset: 0; z-index: 100000; background: radial-gradient(circle at 20% 25%, rgba(92,106,255,0.34), transparent 22%), radial-gradient(circle at 76% 18%, rgba(255,255,255,0.24), transparent 2px), radial-gradient(circle at 15% 72%, rgba(255,255,255,0.18), transparent 2px), radial-gradient(circle at 82% 66%, rgba(126,232,255,0.18), transparent 18%), linear-gradient(145deg, #03040b 0%, #071226 45%, #13091f 100%); color: #fff; align-items: center; justify-content: center; padding: 0; }
+#rebirth-screen.open { display:flex; }
+#rebirth-anim-text { font-size: 28px; font-weight: bold; letter-spacing: 1px; }
+#rebirth-screen.menu-open { align-items: stretch; justify-content: center; overflow: auto; }
+#rebirth-screen.menu-open #rebirth-anim-text { display:none; }
+#rebirth-menu { display:none; width: 100%; min-height: 100vh; padding: 22px 28px 32px; position: relative; z-index: 2; }
+#rebirth-screen.menu-open #rebirth-menu { display:block; }
+#rebirth-menu::before { content:""; position:fixed; inset:0; pointer-events:none; background-image: radial-gradient(circle, rgba(255,255,255,0.9) 0 1px, transparent 1.6px), radial-gradient(circle, rgba(160,194,255,0.55) 0 1px, transparent 1.8px); background-size: 92px 92px, 137px 137px; opacity:0.42; }
+#rebirth-menu-head { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; padding:12px 0; backdrop-filter: blur(6px); }
+#rebirth-menu-head h3 { margin:0; font-size:18px; }
+#rebirth-menu-head p { margin:4px 0 0; font-size:12px; color:#cfd3ff; }
+#rebirth-points-readout { font-size:13px; font-weight:bold; color:#fff; padding:8px 10px; border:1px solid rgba(255,255,255,0.22); border-radius:8px; background:rgba(255,255,255,0.08); }
+#rebirth-close { border:none; border-radius:8px; background:#fff; color:#171725; font-weight:bold; padding:9px 12px; cursor:pointer; }
+#kensinger-sprite.exploding { animation: rebirthExplode 0.9s ease-out forwards; }
+@keyframes rebirthExplode { 0%{transform:scale(1);filter:brightness(1)} 55%{transform:scale(1.7) rotate(18deg);filter:brightness(2.4)} 100%{transform:scale(0);opacity:0;filter:brightness(4)} }
+.tony-friend { position: fixed; z-index: 80; width: 54px; height: 54px; border-radius: 50%; background: #fff center/cover no-repeat; border: 3px solid #d14b2f; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.28); user-select:none; }
+.mini-tony { position: fixed; z-index: 74; width: 24px; height: 24px; border-radius: 50%; background: #fff center/cover no-repeat; border: 2px solid #d14b2f; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.22); }
+.pepperoni { position: fixed; z-index: 75; width: 34px; height: 34px; border-radius: 50%; background: #c83224 center/cover no-repeat; border: 3px solid #f4c15d; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.25); }
+.pepperoni.golden { background: gold; border-color: #fff3a0; }
+#bair-flood {
+  display: block; position: fixed; inset: auto 0 0 0; height: 0; z-index: 60; pointer-events: none;
+  background-size: cover; background-position: center bottom; opacity: 0;
+  transform: translateY(0);
+  transform-origin: bottom center;
+  transition: height 0.16s linear, transform 0.7s cubic-bezier(.2,.85,.2,1), opacity 0.25s ease, filter 0.25s ease;
+  mix-blend-mode: normal;
+}
+#bair-flood.active { transform: translateY(0); opacity: 0.24; }
+
+#bair-barrage-sprite {
+  display: block; position: fixed; left: 50%; bottom: 0; z-index: 61; pointer-events: none;
+  width: auto; max-width: min(90vw, 800px); height: 0; opacity: 0;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  object-fit: contain;
+  transition: height 0.16s linear, opacity 0.25s ease, filter 0.25s ease;
+  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.28));
+}
+#bair-barrage-sprite.active { opacity: 1; }
+#bair-barrage-sprite.charging { opacity: 0.88; }
+#bair-barrage-sprite.falling { opacity: 0; }
+body:not(.theme-dark) #bair-flood { opacity: 0.28; filter: brightness(1.02) saturate(0.92) contrast(1.04); }
+body.theme-dark #bair-flood { opacity: 0.32; filter: brightness(1.58) contrast(1.12) saturate(1.02); }
+body:not(.theme-dark) #bair-barrage-sprite { filter: drop-shadow(0 10px 30px rgba(0,0,0,0.24)); }
+body.theme-dark #bair-barrage-sprite { filter: brightness(1.85) contrast(1.08) saturate(0.95) drop-shadow(0 10px 30px rgba(0,0,0,0.42)); opacity: 0.95; }
+
+#bair-barrage-meter {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  width: min(360px, 72vw); height: 12px; border-radius: 999px;
+  background: rgba(0,0,0,0.16); overflow: hidden; z-index: 2;
+  pointer-events: none; opacity: 0; transition: opacity 0.25s ease;
+}
+#bair-barrage-meter.show { opacity: 1; }
+#bair-barrage-fill {
+  width: 0%; height: 100%; border-radius: inherit;
+  background: linear-gradient(90deg, #c62828, #fbc02d, #2e7d32);
+  box-shadow: 0 0 10px rgba(0,0,0,0.18) inset;
+  transition: width 0.12s linear, background 0.25s linear;
+}
+body.theme-dark #bair-barrage-meter { background: rgba(255,255,255,0.18); }
+body.theme-dark #bair-barrage-fill {
+  background: linear-gradient(90deg, #ff5252, #ffd54f, #a5d6a7);
+  box-shadow: 0 0 10px rgba(255,255,255,0.16) inset, 0 0 8px rgba(255,255,255,0.10);
+}
+body.theme-dark #rebirth-summary { background:#20242c; border-color:#3d4552; color:#d8dde6; }
+body.theme-dark #rebirth-note { color:#c4cad6; }
+#stock-panel {
+  position: absolute; left: 12px; top: 332px; z-index: 80;
+  width: 286px; max-height: calc(100vh - 96px);
+  background: rgba(255,255,255,0.96); border: 2px solid #e2e6d8;
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden; transition: width 0.18s, max-height 0.18s, top 0.18s, opacity 0.18s, transform 0.18s;
+  display: none;
+}
+#stock-panel.unlocked { display: block; }
+#stock-panel.collapsed { width: 46px; max-height: 46px; }
+#stock-toggle {
+  width: 42px; height: 42px; border: none; background: #edf7dd;
+  cursor: pointer; font-size: 20px; font-weight: bold;
+  border-radius: 0;
+}
+#stock-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+#stock-panel.collapsed #stock-body { display: none; }
+#stock-panel:not(.collapsed) #stock-toggle { width: 100%; height: 42px; border-radius: 0; font-size: 20px; }
+#stock-title { font-size: 13px; font-weight: bold; color: #31421f; }
+#stock-status { font-size: 11px; color: #66705c; line-height: 1.35; }
+#stock-list { display: flex; flex-direction: column; gap: 7px; }
+.stock-row { display:grid; grid-template-columns: 1fr auto auto; gap:6px; align-items:center; font-size:11px; }
+.stock-row button { border:none; border-radius:6px; padding:5px 7px; background:#333; color:#fff; font-size:10px; cursor:pointer; }
+body.theme-dark #stock-panel { background: rgba(32,36,44,0.97); border-color:#3d4552; color:#d8dde6; }
+body.theme-dark #stock-title { color:#f2f4f8; }
+body.theme-dark #stock-status { color:#aab2bf; }
+body.theme-dark #stock-toggle { background:#334028; color:#f2f4f8; }
+body.theme-dark .stock-row button { background:#f2f4f8; color:#15171c; }
+#bair-barrage-status { margin-top:4px; font-size:11px; color:#54606d; }
+body.theme-dark #bair-barrage-status { color:#aab2bf; }
+</style>
+</head>
+<body>
+<div id="dev-mode-badge">DEVELOPER MODE</div>
+<div id="app">
+
+  <!-- LEFT -->
+  <div id="sprite-panel">
+    <div id="score-text">Kensingers: <span id="count">0</span></div>
+    <div id="multiplier-notice"></div>
+    <div id="perm-multiplier-notice"></div>
+        <div id="farm-panel" class="collapsed">
+      <button id="farm-toggle" onclick="toggleFarmPanel()">🌾</button>
+      <span id="farm-ready-badge">0</span>
+      <div id="farm-body">
+        <div id="farm-title">Todd Sword Farm</div>
+        <div id="farm-status">Pick a crop, then choose a plot.</div>
+        <div class="farm-tabs">
+          <button class="farm-tab-btn active" id="farm-tab-plots" onclick="setFarmTab('plots')">Plots</button>
+          <button class="farm-tab-btn" id="farm-tab-recipes" onclick="setFarmTab('recipes')">Recipes</button>
+        </div>
+        <div class="farm-view active" id="farm-plots-view">
+          <div id="crop-picker">
+            <button class="crop-btn" id="crop-packet" draggable="true" ondragstart="startCropDrag(event,'packetPatch')" onclick="selectCrop('packetPatch')">
+              Biology Patch <span class="crop-sub" id="crop-packet-sub">Cost: 60s CPS</span>
+            </button>
+            <button class="crop-btn" id="crop-lab" draggable="true" ondragstart="startCropDrag(event,'labCorn')" onclick="selectCrop('labCorn')">
+              Lab Corn <span class="crop-sub" id="crop-lab-sub">Cost: 120s CPS</span>
+            </button>
+            <button class="crop-btn" id="crop-carrot" draggable="true" ondragstart="startCropDrag(event,'kensingerCarrot')" onclick="selectCrop('kensingerCarrot')">
+              Kensinger Carrot <span class="crop-sub" id="crop-carrot-sub">Recipe crop</span>
+            </button>
+            <button class="crop-btn" id="crop-sword" draggable="true" ondragstart="startCropDrag(event,'swordBloom')" onclick="selectCrop('swordBloom')">
+              Sword Bloom <span class="crop-sub" id="crop-sword-sub">Recipe crop</span>
+            </button>
+          </div>
+          <div id="farm-grid"></div>
+        </div>
+        <div class="farm-view" id="farm-recipes-view">
+          <div id="recipe-list"></div>
+        </div>
+        <div id="farm-notice"></div>
+      </div>
+    </div>
+    <div id="stock-panel" class="collapsed">
+      <button id="stock-toggle" onclick="toggleStockPanel()">🏦</button>
+      <div id="stock-body">
+        <div id="stock-title">Bair Banking</div>
+        <div id="stock-status">Prices update every minute.</div>
+        <div id="stock-list"></div>
+      </div>
+    </div>
+    <div id="dev-panel">
+      <button id="dev-toggle" onclick="toggleDevPanel()">🔧</button>
+      <div id="dev-body">
+        <h4>DEVELOPER MODE</h4>
+        <input class="dev-input" id="dev-money-input" type="number" min="0" placeholder="Kensinger amount...">
+        <div class="dev-grid">
+          <button class="dev-btn" onclick="devSetMoney()">Set Money</button>
+          <button class="dev-btn" onclick="devAddMoney(1000000)">+1M</button>
+          <button class="dev-btn" onclick="devAddMoney(1000000000)">+1B</button>
+          <button class="dev-btn" onclick="devAddMoney(1000000000000)">+1T</button>
+          <button class="dev-btn" onclick="devSpeedCrops()">Speed Crops</button>
+          <button class="dev-btn" onclick="devReadyCrops()">Ready Crops</button>
+          <button class="dev-btn" onclick="spawnSpecial('gold')">Spawn Gold</button>
+          <button class="dev-btn" onclick="spawnSpecial('green')">Spawn Green</button>
+          <button class="dev-btn" onclick="devUnlockFarm()">Unlock Farm</button>
+          <button class="dev-btn" onclick="devRevealCrops()">Reveal Crops</button>
+          <button class="dev-btn" onclick="devUnlockAll()">Unlock All</button>
+          <button class="dev-btn" onclick="devGiveAllUpgrades()">All Upgrades</button>
+        </div>
+      </div>
+    </div>
+    <div class="sprite-wrapper">
+      <img id="kensinger-sprite"
+        src="https://resources.finalsite.net/images/f_auto,q_auto,t_image_size_1/v1752781420/beltonschoolsorg/mn7sesas4wdsvbhftsjb/KensingerHeadshot.png"
+        onclick="manualClick()">
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="side-panel">
+
+    <!-- Upgrades Bar -->
+    <div id="upgrades-bar">
+      <h4>One-Time Upgrades</h4>
+      <div id="upgrades-row">
+        <button class="up-btn" id="up-pointer"
+          onclick="buyUpgrade('up-pointer',100,'cursorEfficiency',2,'multiply')"
+          onmouseover="showTip(this,'Getting Started','DOUBLES Auto-Clicker speed',100)"
+          onmouseout="hideTip()">☝️</button>
+        <button class="up-btn" id="up-glove"
+          onclick="buyUpgrade('up-glove',500,'clickPower',5,'multiply')"
+          onmouseover="showTip(this,'Golden Glove','Manual clicks are 5x stronger',500)"
+          onmouseout="hideTip()">🥊</button>
+        <button class="up-btn" id="up-farm"
+          onclick="buyUpgrade('up-farm',1500,'cursorEfficiency',0.5,'add')"
+          onmouseover="showTip(this,'Kensing Farm','Adds +0.5 per second base',1500)"
+          onmouseout="hideTip()">🚜</button>
+        <button class="up-btn" id="up-auto-engine"
+          onclick="buyUpgrade('up-auto-engine',3500,'flag',0,'none')"
+          onmouseover="showTip(this,'Auto Engine','Auto-Kensingers gain +8.6 base CPS and boost Click/Class/Biology by 1% each',3500)"
+          onmouseout="hideTip()">⚙️</button>
+        <button class="up-btn" id="up-crown"
+          onclick="buyUpgrade('up-crown',5000,'flag',0,'none')"
+          onmouseover="showTip(this,'Royalty','Everything is 2x more effective and unlocks the permanent multiplier display',5000)"
+          onmouseout="hideTip()">👑</button>
+        <button class="up-btn" id="up-industrial"
+          onclick="buyUpgrade('up-industrial',10000,'flag',0,'none')"
+          onmouseover="showTip(this,'Industrialization','Kensinger Class is 2x stronger',10000)"
+          onmouseout="hideTip()">🏭</button>
+        <button class="up-btn" id="up-class-focus"
+          onclick="buyUpgrade('up-class-focus',25000,'flag',0,'none')"
+          onmouseover="showTip(this,'Class Focus','Kensinger Class becomes 100 CPS and classes discount Auto-Kensingers up to 10%',25000)"
+          onmouseout="hideTip()">📚</button>
+        <button class="up-btn" id="up-dividends"
+          onclick="buyUpgrade('up-dividends',50000,'flag',0,'none')"
+          onmouseover="showTip(this,'Golden Dividends','Gold Kensingers grant 60s of CPS',50000)"
+          onmouseout="hideTip()">💰</button>
+        <button class="up-btn" id="up-gamma"
+          onclick="buyUpgrade('up-gamma',50000,'flag',0,'none')"
+          onmouseover="showTip(this,'Gamma Radiation','Unlocks Green Kensingers (10x Power)',50000)"
+          onmouseout="hideTip()">🧪</button>
+        <button class="up-btn" id="up-pirates"
+          onclick="buyUpgrade('up-pirates',100000,'flag',0,'none')"
+          onmouseover="showTip(this,'Belton Pirates','Up to 2x gains based on your clicks/sec',100000)"
+          onmouseout="hideTip()">
+          <img src="https://s3-us-west-2.amazonaws.com/scorestream-team-profile-pictures/9112/20230802034950_616_mascot1280Near.png"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="Belton Pirates">
+        </button>
+        <button class="up-btn" id="up-freshman"
+          onclick="buyUpgrade('up-freshman',250000,'flag',0,'none')"
+          onmouseover="showTip(this,'Freshman Office','Adkins auto-click 2x faster',250000)"
+          onmouseout="hideTip()">🎓</button>
+        <button class="up-btn" id="up-todd-class"
+          onclick="buyUpgrade('up-todd-class',1000000,'flag',0,'none')"
+          onmouseover="showTip(this,'Todd Sword Class','Unlocks Biology Packet in the shop',1000000)"
+          onmouseout="hideTip()">
+          <img src="https://cdn.discordapp.com/attachments/1485185118313250918/1500455189885222994/image1.jpg?ex=69f87f4a&amp;is=69f72dca&amp;hm=fbab11645235ad8bd09c39e04a22c2aa7f8e0195921a1b72c07ac466d36938ab&amp;"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="Todd Sword">
+        </button>
+        <button class="up-btn" id="up-todd-farm"
+          onclick="buyUpgrade('up-todd-farm',10000000,'flag',0,'none')"
+          onmouseover="showTip(this,'Todd Sword Farm','Unlocks the expandable crop farm',10000000)"
+          onmouseout="hideTip()">🌾</button>
+        <button class="up-btn" id="up-crop-speed"
+          onclick="buyUpgrade('up-crop-speed',25000000,'flag',0,'none')"
+          onmouseover="showTip(this,'Packet Fertilizer','All crops finish 10 seconds faster',25000000)"
+          onmouseout="hideTip()">⏱️</button>
+        <button class="up-btn" id="up-cross-breeding"
+          onclick="buyUpgrade('up-cross-breeding',50000000,'flag',0,'none')"
+          onmouseover="showTip(this,'Cross Breeding','Allows hidden crop discoveries through farm patterns',50000000)"
+          onmouseout="hideTip()">🧬</button>
+        <button class="up-btn" id="up-adkins-net-1" onclick="buyUpgrade('up-adkins-net-1',100000000,'flag',0,'none')" onmouseover="showTip(this,'Adkins Net 1','Spreads Adkins out by 1%',100000000)" onmouseout="hideTip()">🕸️</button>
+        <button class="up-btn" id="up-adkins-net-2" onclick="buyUpgrade('up-adkins-net-2',250000000,'flag',0,'none')" onmouseover="showTip(this,'Adkins Net 2','Spreads Adkins out by 1%',250000000)" onmouseout="hideTip()">🕸️</button>
+        <button class="up-btn" id="up-bairllion"
+          onclick="buyUpgrade('up-bairllion',1000000000,'flag',0,'none')"
+          onmouseover="showTip(this,'A Bairllion','Adds a permanent 2x global multiplier to everything',1000000000)"
+          onmouseout="hideTip()">
+          <img src="https://cdn.discordapp.com/attachments/1489453570230059068/1501722601704263871/490256907_1478851226821379_7390752593165406305_n201.png?ex=69fd1ba8&amp;is=69fbca28&amp;hm=6938eb24b93292d7a7d35bf664b1acc069c52b0ff09b5b7e3b668f239af36a2b&amp;"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="A Bairllion">
+        </button>
+        <button class="up-btn" id="up-apocalypse" onclick="buyUpgrade('up-apocalypse',2500000000,'flag',0,'none')" onmouseover="showTip(this,'Kensinger Apocalypse','Green Kensingers spawn 50% of the time and their click spawn chance is halved. Green Kensingers also grant 120 seconds of CPS and a 10x temporary multiplier.',2500000000)" onmouseout="hideTip()">🌋</button>
+        <button class="up-btn" id="up-friend" onclick="buyUpgrade('up-friend',2500000000,'flag',0,'none')" onmouseover="showTip(this,'Friend','Adds Tony and pepperonis',2500000000)" onmouseout="hideTip()">🍕</button>
+        <button class="up-btn" id="up-better-friend" onclick="buyUpgrade('up-better-friend',10000000000,'flag',0,'none')" onmouseover="showTip(this,'Better Friend','Pepperonis are more common and Tony moves slower',10000000000)" onmouseout="hideTip()">🍕</button>
+        <button class="up-btn" id="up-best-friend" onclick="buyUpgrade('up-best-friend',25000000000,'flag',0,'none')" onmouseover="showTip(this,'Best Friend','More pepperonis and golden pepperoni bonuses',25000000000)" onmouseout="hideTip()">🏆</button>
+        <button class="up-btn" id="up-bair-booster-1"
+          onclick="buyUpgrade('up-bair-booster-1',25000000000,'flag',0,'none')"
+          onmouseover="showTip(this,'Bair Booster 1','Doubles Bair Power click gain',25000000000)"
+          onmouseout="hideTip()">
+          <img src="https://cdn.discordapp.com/attachments/1489453570230059068/1501722601704263871/490256907_1478851226821379_7390752593165406305_n201.png?ex=69fd1ba8&amp;is=69fbca28&amp;hm=6938eb24b93292d7a7d35bf664b1acc069c52b0ff09b5b7e3b668f239af36a2b&amp;"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="Bair Booster 1">
+        </button>
+        <button class="up-btn" id="up-bair-booster-2"
+          onclick="buyUpgrade('up-bair-booster-2',125000000000,'flag',0,'none')"
+          onmouseover="showTip(this,'Bair Booster 2','Doubles Bair Power again',125000000000)"
+          onmouseout="hideTip()">
+          <img src="https://cdn.discordapp.com/attachments/1489453570230059068/1501722601704263871/490256907_1478851226821379_7390752593165406305_n201.png?ex=69fd1ba8&amp;is=69fbca28&amp;hm=6938eb24b93292d7a7d35bf664b1acc069c52b0ff09b5b7e3b668f239af36a2b&amp;"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="Bair Booster 2">
+        </button>
+        <button class="up-btn" id="up-adkins-acceleration" onclick="buyUpgrade('up-adkins-acceleration',250000000000,'flag',0,'none')" onmouseover="showTip(this,'Adkins Acceleration','Adkins click 2x faster',250000000000)" onmouseout="hideTip()">⚡</button>
+        <button class="up-btn" id="up-bair-barrage" onclick="buyUpgrade('up-bair-barrage',250000000000,'flag',0,'none')" onmouseover="showTip(this,'Bair Barrage','Every 1000 manual clicks starts a 2x event for 30 seconds, or 5x for 60 seconds after buying the upgrade.',250000000000)" onmouseout="hideTip()">
+          <img src="https://cdn.discordapp.com/attachments/1489453570230059068/1501722601704263871/490256907_1478851226821379_7390752593165406305_n201.png?ex=69fd1ba8&amp;is=69fbca28&amp;hm=6938eb24b93292d7a7d35bf664b1acc069c52b0ff09b5b7e3b668f239af36a2b&amp;"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="Bair Barrage">
+        </button>
+        <button class="up-btn" id="up-bair-banking" onclick="buyUpgrade('up-bair-banking',1000000000000,'flag',0,'none')" onmouseover="showTip(this,'Bair Banking','Unlocks stock investing foundation','1T')" onmouseout="hideTip()">
+          <img src="https://cdn.discordapp.com/attachments/1489453570230059068/1501722601704263871/490256907_1478851226821379_7390752593165406305_n201.png?ex=69fd1ba8&amp;is=69fbca28&amp;hm=6938eb24b93292d7a7d35bf664b1acc069c52b0ff09b5b7e3b668f239af36a2b&amp;"
+            style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="Bair Banking">
+        </button>
+        <button class="up-btn" id="up-tony-town" onclick="buyUpgrade('up-tony-town',10000000000000,'flag',0,'none')" onmouseover="showTip(this,'Tony Town','Adds +1B CPS, +1M click power, and mini Tony collectors',10000000000000)" onmouseout="hideTip()">🏘️</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div id="tab-bar">
+            <button class="tab-btn active" onclick="setTab('shop',this)">🛒 Shop</button>
+      <button class="tab-btn"        onclick="setTab('settings',this)">⚙️ Settings</button>
+      <button class="tab-btn"        onclick="setTab('rebirth',this)">🌌 Rebirth</button>
+    </div>
+
+    <!-- Shop Tab -->
+    <div id="shop-tab" class="tab-content active">
+      <div id="shop-stats">
+        Per Second: <span id="per-sec">0</span> &nbsp;|&nbsp; Click Power: <span id="c-pow">1</span>
+        <div id="bair-barrage-status"></div>
+      </div>
+      <div class="buy-toggle-row">
+        <button class="toggle-btn active" id="tog1"   onclick="setAmount(1)">Buy 1</button>
+        <button class="toggle-btn"        id="tog10"  onclick="setAmount(10)">Buy 10</button>
+        <button class="toggle-btn"        id="togAll" onclick="setAmount('all')">Buy ALL</button>
+      </div>
+
+      <button class="shop-btn" id="btn-auto" onclick="buy('auto',10)">
+        <span class="btn-label">Auto-Kensinger
+          <span class="btn-sub">+<span id="label-eff">0.10</span>/s &nbsp; Owned: <span id="count-auto">0</span></span>
+        </span>
+        <span class="price-tag" id="price-auto">10</span>
+      </button>
+
+      <button class="shop-btn" id="btn-click" onclick="buy('click',100)">
+        <span class="btn-label">Click Power
+          <span class="btn-sub">+<span id="label-click-power">1</span>/click &nbsp; Owned: <span id="count-click">0</span></span>
+        </span>
+        <span class="price-tag" id="price-click">100</span>
+      </button>
+
+      <button class="shop-btn" id="btn-class" onclick="buy('class',1000)">
+        <span class="btn-label">Kensinger Class
+          <span class="btn-sub">+<span id="class-power-label">5.0</span>/s &nbsp; Owned: <span id="count-class">0</span></span>
+        </span>
+        <span class="price-tag" id="price-class">1,000</span>
+      </button>
+      <button class="shop-btn" id="btn-biology" onclick="buy('biology',1000000)">
+        <span class="btn-label">Biology Packet
+          <span class="btn-sub">+<span id="biology-power-label">2500</span>/s &nbsp; Owned: <span id="count-biology">0</span></span>
+        </span>
+        <span class="price-tag" id="price-biology">1,000,000</span>
+      </button>
+
+      <button class="shop-btn" id="btn-office" onclick="buy('office',15000)">
+        <span class="btn-label">Kensinger Office
+          <span class="btn-sub">+0.1% Gold chance &nbsp; Owned: <span id="count-office">0</span>/10</span>
+        </span>
+        <span class="price-tag" id="price-office">15,000</span>
+      </button>
+
+      <button class="shop-btn" id="btn-assistant" onclick="buy('assistant',100000)">
+        <span class="btn-label">Adkins Assistant
+          <span class="btn-sub">Auto-Clicker &nbsp; Owned: <span id="count-assistant">0</span>/<span id="max-assistant">100</span></span>
+        </span>
+        <span class="price-tag" id="price-assistant">100,000</span>
+      </button>
+
+      <button class="shop-btn" id="btn-bairPower" onclick="buy('bairPower',1000000000)">
+        <span class="btn-label">Bair Power
+          <span class="btn-sub">+12,500+ Click Power &nbsp; Owned: <span id="count-bairPower">0</span></span>
+        </span>
+        <span class="price-tag" id="price-bairPower">1B</span>
+      </button>
+
+      <button class="shop-btn" id="btn-bairBank" onclick="buy('bairBank',250000000000)">
+        <span class="btn-label">Bair Bank
+          <span class="btn-sub">+1M/s and +10K click &nbsp; Owned: <span id="count-bairBank">0</span></span>
+        </span>
+        <span class="price-tag" id="price-bairBank">250B</span>
+      </button>
+    </div>
+    <!-- Rebirth Tab -->
+    <div id="rebirth-tab" class="tab-content">
+      <div id="rebirth-summary"></div>
+      <button id="rebirth-button" onclick="startRebirth()">Rebirth</button>
+      <button id="rebirth-open-tree" onclick="openRebirthMenu()">Open Upgrade Tree</button>
+      <div id="rebirth-note">Rebirth upgrades open only after you rebirth. Spend your points there, then close the menu to start again.</div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settings-tab" class="tab-content">
+      <div class="settings-section" id="theme-section">
+        <h3>⚙️ Settings</h3>
+        <div class="theme-row">
+          <button class="theme-btn active" id="theme-light" onclick="setTheme('light')">Light</button>
+          <button class="theme-btn"        id="theme-dark"  onclick="setTheme('dark')">Dark</button>
+        </div>
+              <div class="setting-toggle-row">
+          <button class="setting-toggle" id="toggle-rounded" onclick="toggleRoundedDisplay()">
+            Whole-number stats <span id="rounded-state">Off</span>
+          </button>
+          <button class="setting-toggle active" id="toggle-compact" onclick="toggleCompactNumbers()">
+            Price Abbreviations <span id="compact-state">On</span>
+          </button>
+          </div>      </div>
+
+      <div class="settings-section" id="codes-section">
+        <h3>🔐 Secret Codes</h3>
+        <input type="text" id="code-input" placeholder="ENTER CODE..."
+          onkeydown="if(event.key==='Enter') redeemCode()">
+        <button id="redeem-btn" onclick="redeemCode()">Redeem</button>
+        <div id="code-msg"></div>
+      </div>
+
+      <div class="settings-section" id="save-section">
+
+        <h3>💾 Save / Load Data</h3>
+        <p>Your game auto-saves in this browser. Use Export/Import to back up your save or move it to another device or Google Site embed.</p>
+        <button class="save-btn" id="btn-export" onclick="exportSave()">📤 Export Save Code</button>
+        <textarea id="import-area" placeholder="Paste save code here to import..."></textarea>
+        <button class="save-btn" id="btn-import" onclick="importSave()">📥 Import Save Code</button>
+        <button class="save-btn" id="btn-reset"  onclick="resetSave()">🗑 Reset All Data</button>
+        <div id="save-msg"></div>
+      </div>
+      <div class="settings-section" id="updates-section">
+        <h3>🆕 Updates</h3>
+        <button class="save-btn" id="btn-read-updates" onclick="showUpdateLog(true)">Read Updates</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="reset-modal">
+  <div id="reset-box">
+    <h3>Reset Game?</h3>
+    <p>This will permanently erase <strong>all</strong> your progress.<br>There is no undo.</p>
+    <div class="reset-row">
+      <button id="reset-confirm" onclick="doReset()">Yes, Reset</button>
+      <button id="reset-cancel"  onclick="closeResetModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="bair-flood"></div>
+<div id="bair-barrage-sprite"></div>
+<div id="bair-barrage-meter"><div id="bair-barrage-fill"></div></div>
+<div id="rebirth-screen">
+  <div id="rebirth-anim-text">REBIRTHING...</div>
+  <div id="rebirth-menu">
+    <div id="rebirth-menu-head">
+      <div>
+        <h3>Rebirth Upgrade Tree</h3>
+        <p>Spend your rebirth points before returning to the farm.</p>
+      </div>
+      <div id="rebirth-points-readout">0 RP</div>
+      <button id="rebirth-close" onclick="closeRebirthMenu()">Done</button>
+    </div>
+    <div id="rebirth-tree"></div>
+  </div>
+</div>
+<div id="up-tooltip">
+  <span class="tt-name"  id="tt-name">Upgrade</span>
+  <span id="tt-desc">Details</span>
+  <span class="tt-price" id="tt-price">Cost: 0</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SHARED STATE
+// ═══════════════════════════════════════════════════════════
+const SAVE_KEY = 'kensingerClicker_save';
+const GROWTH   = 1.15;
+const _CUR_VERSION = '1.5';
+const TONY_IMG = 'AssetsForGame/TonyImage.png';
+const PEPPERONI_IMG = 'https://www.ctifoods.com/wp-content/uploads/2025/06/pepperoni-liguria-copy-1.png';
+const BAIR_IMG = 'AssetsForGame/BairUpgradeImages.png';
+const TODD_IMG = 'AssetsForGame/ToddSwordImages.png';
+
+const S = {
+  kensingers:       0,
+  multiplier:       1,
+  permMultiplier:   1,
+  cursorEfficiency: 0.1,
+  autoOwned:        0,
+  clickOwned:       0,
+  classOwned:       0,
+  biologyOwned:     0,
+  officeOwned:      0,
+  assistantOwned:   0,
+  bairPowerOwned:   0,
+  bairBankOwned:    0,
+  bought:           {},
+  seen:             {},
+  codes:            {},
+  settings:         { theme: 'light', roundedDisplay: false, priceAbbreviations: true, lastVersion: '' },
+  farmClockClicks:  0,
+  lastFarmGrowthAt: 0,
+  rebirthPoints:    0,
+  totalRebirths:    0,
+  rebirthUpgrades:  {},
+  manualClickCount: 0,
+  pepperoniClaims:0, stocks:{ prices:{tonyInc:1,swordFarms:1,adkinsAirlines:1}, shares:{tonyInc:0,swordFarms:0,adkinsAirlines:0}, lastTick:0 },
+    buffs:            { goldUntil: 0, greenUntil: 0, boostUntil: 0, boostAmount: 1, cpsPenaltyUntil: 0, cpsBoostUntil: 0, cpsBoostAmount: 1, specialBlockUntil: 0, specialBoostUntil: 0, adkinsEfficiencyUntil: 0, clickBoostUntil: 0, bairBarrageUntil: 0 },
+  flying:           [],
+  crops:            [],
+  farmPlots:        Array(9).fill(null),
+  unlockedCrops:    {},
+  selectedCrop:     'packetPatch',
+  farmTab:          'plots',
+  farmOpen:         false,
+  stockOpen:        false,
+  devMode:          false
+};
+
+// Pirates CPS tracking (manual clicks only, not Adkins)
+let manualClickTimestamps = [];
+let piratesMultiplier     = 1.0;
+let _farmTk = 14;
+var farmDefinitionsReady = false;
+let _tabHidden = document.hidden;
+let _lastGoldSpawn = 0, _lastGreenSpawn = 0;
+document.addEventListener('visibilitychange', function() {
+  _tabHidden = document.hidden;
+  if (!_tabHidden) {
+    _lastGoldSpawn = Date.now();
+    _lastGreenSpawn = Date.now();
+    enforceSpecialCap();
+  }
+});
+let goldMult  = 1, greenMult  = 1;
+let goldTimer = null, greenTimer = null, boostTimer = null, cpsPenaltyTimer = null, cpsBoostTimer = null, specialBlockTimer = null, specialBoostTimer = null;
+let _bairBarrageWasActive = false;
+let _bairBarrageHasTriggeredOnce = false;
+let _bairBarrageStartedAt = 0;
+let _bairBarrageFrame = 0;
+const SPECIAL_KENSINGER_CAP = 20;
+
+function getBaseStatePatch() {
+  return {
+    kensingers:0, multiplier:1, permMultiplier:1, cursorEfficiency:0.1, autoOwned:0, clickOwned:0, classOwned:0, biologyOwned:0,
+    officeOwned:0, assistantOwned:0, bairPowerOwned:0, bairBankOwned:0, bought:{}, seen:{}, codes:{}, settings:{ theme:'light', roundedDisplay:false, priceAbbreviations:true },
+    farmClockClicks:0, lastFarmGrowthAt:0, rebirthPoints:0, totalRebirths:0, rebirthUpgrades:{}, manualClickCount:0, pepperoniClaims:0, stocks:{ prices:{tonyInc:1,swordFarms:1,adkinsAirlines:1}, shares:{tonyInc:0,swordFarms:0,adkinsAirlines:0}, lastTick:0 },
+    buffs:{ goldUntil:0, greenUntil:0, boostUntil:0, boostAmount:1, cpsPenaltyUntil:0, cpsBoostUntil:0, cpsBoostAmount:1, specialBlockUntil:0, specialBoostUntil:0, adkinsEfficiencyUntil:0, clickBoostUntil:0, bairBarrageUntil:0 },
+    flying:[], crops:[], farmPlots:Array(9).fill(null), unlockedCrops:{}, selectedCrop:'packetPatch', farmTab:'plots', farmOpen:false, stockOpen:false, devMode:false
+  };
+}
+
+function normalizeSaveState() {
+  const base = getBaseStatePatch();
+  Object.keys(base).forEach(key => {
+    if (S[key] === undefined) S[key] = Array.isArray(base[key]) ? [] : (typeof base[key] === 'object' && base[key] !== null ? Object.assign({}, base[key]) : base[key]);
+  });
+  S.settings = Object.assign({ theme: 'light', roundedDisplay: false, priceAbbreviations: true, lastVersion: '' }, S.settings || {});
+  delete S.settings.sfx;
+  if (S.settings.compactNumbers !== undefined && S.settings.priceAbbreviations === undefined) S.settings.priceAbbreviations = S.settings.compactNumbers;
+  S.buffs = Object.assign({}, base.buffs, S.buffs || {});
+  S.flying = Array.isArray(S.flying) ? S.flying : [];
+  S.crops = Array.isArray(S.crops) ? S.crops : [];
+  S.farmPlots = Array.isArray(S.farmPlots) && S.farmPlots.length === 9 ? S.farmPlots : Array(9).fill(null);
+  if (S.crops.length && S.farmPlots.every(plot => !plot)) {
+    S.crops.slice(0, 9).forEach((crop, index) => { S.farmPlots[index] = crop; });
+    S.crops = [];
+  }
+  S.unlockedCrops = Object.assign({}, S.unlockedCrops || {});
+  S.rebirthUpgrades = Object.assign({}, S.rebirthUpgrades || {});
+  S.stocks = S.stocks || { prices:{}, shares:{}, lastTick:0 };
+  S.stocks.prices = Object.assign({tonyInc:1,swordFarms:1,adkinsAirlines:1}, S.stocks.prices || {});
+  Object.keys(S.stocks.prices).forEach(id => { if (S.stocks.prices[id] > 10) S.stocks.prices[id] = 1; });
+  S.stocks.shares = Object.assign({tonyInc:0,swordFarms:0,adkinsAirlines:0}, S.stocks.shares || {});
+  ['bairPowerOwned','bairBankOwned','rebirthPoints','totalRebirths','manualClickCount','pepperoniClaims','lastFarmGrowthAt'].forEach(k => { S[k] = Number(S[k]) || 0; });
+  S.selectedCrop = S.selectedCrop || 'packetPatch';
+  S.farmTab = S.farmTab || 'plots';
+  restorePausedCropTimers();
+}
+
+function pauseCropTimersForSave() {
+  if (!Array.isArray(S.farmPlots)) return;
+  S.farmPlots.forEach(plot => { if (plot && typeof normalizeCropProgress === 'function') normalizeCropProgress(plot); });
+}
+
+function restorePausedCropTimers() {
+  if (!Array.isArray(S.farmPlots)) return;
+  S.farmPlots.forEach(plot => { if (plot && typeof normalizeCropProgress === 'function') normalizeCropProgress(plot); });
+}
+function updateRuntimeSaveState() {
+  syncBuffs();
+  if (typeof updateFlyingSaveState === 'function') updateFlyingSaveState();
+  pauseCropTimersForSave();
+}
+
+function saveGame() {
+  try {
+    updateRuntimeSaveState();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(S));
+  } catch(e) {}
+}
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      Object.assign(S, parsed);
+    }
+  } catch(e) {}
+  normalizeSaveState();
+  syncBuffs();
+  scheduleBuffTimers();
+}
+
+function syncBuffs() {
+  normalizeSaveState();
+  const now = Date.now();
+  if (S.buffs.goldUntil && S.buffs.goldUntil <= now) S.buffs.goldUntil = 0;
+  if (S.buffs.greenUntil && S.buffs.greenUntil <= now) S.buffs.greenUntil = 0;
+  if (S.buffs.boostUntil && S.buffs.boostUntil <= now) { S.buffs.boostUntil = 0; S.buffs.boostAmount = 1; }
+  if (S.buffs.cpsPenaltyUntil && S.buffs.cpsPenaltyUntil <= now) S.buffs.cpsPenaltyUntil = 0;
+  if (S.buffs.cpsBoostUntil && S.buffs.cpsBoostUntil <= now) { S.buffs.cpsBoostUntil = 0; S.buffs.cpsBoostAmount = 1; }
+  if (S.buffs.specialBlockUntil && S.buffs.specialBlockUntil <= now) S.buffs.specialBlockUntil = 0;
+  if (S.buffs.specialBoostUntil && S.buffs.specialBoostUntil <= now) S.buffs.specialBoostUntil = 0;
+  if (S.buffs.adkinsEfficiencyUntil && S.buffs.adkinsEfficiencyUntil <= now) S.buffs.adkinsEfficiencyUntil = 0;
+  if (S.buffs.clickBoostUntil && S.buffs.clickBoostUntil <= now) S.buffs.clickBoostUntil = 0;
+  if (S.buffs.bairBarrageUntil && S.buffs.bairBarrageUntil <= now) S.buffs.bairBarrageUntil = 0;
+  goldMult = S.buffs.goldUntil > now ? 3 : 1;
+  greenMult = S.buffs.greenUntil > now ? 10 : 1;
+  S.multiplier = S.buffs.boostUntil > now ? S.buffs.boostAmount : 1;
+}
+
+function scheduleOneTimer(current, until, setter) {
+  if (current) clearTimeout(current);
+  const remaining = until - Date.now();
+  if (remaining <= 0) return null;
+  return setTimeout(() => { syncBuffs(); updateUI(); saveGame(); }, remaining + 50);
+}
+
+function scheduleBuffTimers() {
+  syncBuffs();
+  goldTimer = scheduleOneTimer(goldTimer, S.buffs.goldUntil || 0);
+  greenTimer = scheduleOneTimer(greenTimer, S.buffs.greenUntil || 0);
+  boostTimer = scheduleOneTimer(boostTimer, S.buffs.boostUntil || 0);
+  cpsPenaltyTimer = scheduleOneTimer(cpsPenaltyTimer, S.buffs.cpsPenaltyUntil || 0);
+  cpsBoostTimer = scheduleOneTimer(cpsBoostTimer, S.buffs.cpsBoostUntil || 0);
+  specialBlockTimer = scheduleOneTimer(specialBlockTimer, S.buffs.specialBlockUntil || 0);
+  specialBoostTimer = scheduleOneTimer(specialBoostTimer, S.buffs.specialBoostUntil || 0);
+}
+loadGame();
+
+// ═══════════════════════════════════════════════════════════
+const BAIR_FLOOD_IMG = 'AssetsForGame/BairFloodImage.png';
+
+const REBIRTH_UPGRADE_DATA = [
+  { id: 'freshStart', name: 'A Fresh Start', icon: '🌱', cost: 0, max: 1, x: 370, y: 285, desc: '+10% permanent Kensinger earnings.' },
+  { id: 'adkinsAccuracy', name: 'Adkins Accuracy', icon: '🎯', cost: 1, max: 10, parent: 'freshStart', x: 125, y: 175, desc: 'Each Adkins gets +0.1% crit chance for a 25x click boost.' },
+  { id: 'adkinsArsenal', name: 'Adkins Arsenal', icon: '🧰', cost: 10, max: 10, parent: 'adkinsAccuracy', x: 45, y: 295, desc: '+10 Adkins cap per purchase.' },
+  { id: 'pepperoniMagnet', name: 'Pepperoni Magnet', icon: '🍕', cost: 10, max: 1, parent: 'adkinsArsenal', x: 95, y: 430, desc: 'Adkins collect pepperonis they touch.' },
+  { id: 'tonyAuto', name: 'Tony Clicker', icon: '👆', cost: 25, max: 1, parent: 'pepperoniMagnet', x: 185, y: 535, desc: 'Adkins can auto-click Tony up to 3 times per second.' },
+  { id: 'rebirthEfficiency', name: 'Rebirth Efficiency', icon: '✨', cost: 5, max: 10, parent: 'freshStart', x: 345, y: 120, desc: 'Increase rebirth points granted by 10% per purchase.' },
+  { id: 'rebirthCost', name: 'Rebirth Cost', icon: '📉', cost: 10, max: 5, parent: 'rebirthEfficiency', x: 245, y: 35, desc: 'Rebirth requirement is 10% cheaper per purchase.' },
+  { id: 'retainment', name: 'Retainment', icon: '💼', cost: 25, max: 3, parent: 'rebirthEfficiency', x: 455, y: 35, desc: 'Keep exactly 1K, then 10K, then 100K Kensingers after rebirth.' },
+  { id: 'midMomentum', name: 'Momentum', icon: '🌀', cost: 100, max: 5, parent: 'rebirthEfficiency', x: 575, y: 85, desc: '+5% permanent earnings per purchase.' },
+  { id: 'midWorkshop', name: 'Workshop', icon: '🛠️', cost: 250, max: 5, parent: 'midMomentum', x: 665, y: 175, desc: 'Normal shop costs are 3% cheaper per purchase.' },
+  { id: 'midOverclock', name: 'Overclock', icon: '⏩', cost: 750, max: 3, parent: 'midWorkshop', x: 680, y: 300, desc: '+10% CPS per purchase.' },
+  { id: 'profitableKensingers', name: 'Profitable Kensingers', icon: '💸', cost: 5, max: 1, parent: 'freshStart', x: 475, y: 405, desc: '+90% permanent Kensinger earnings.' },
+  { id: 'profitableKensingersPlus', name: 'Profit+', icon: '💵', cost: 25, max: 100, parent: 'profitableKensingers', x: 555, y: 525, desc: '+2% overall Kensingers earned per purchase.' },
+  { id: 'cuttingCosts', name: 'Cutting Costs', icon: '✂️', cost: 15, max: 5, parent: 'profitableKensingers', x: 640, y: 420, desc: 'Normal shop upgrades are 10% cheaper per purchase.' },
+  { id: 'oneTimeDiscount', name: 'One-Time Deal', icon: '🏷️', cost: 50, max: 1, parent: 'profitableKensingers', x: 700, y: 545, desc: 'One-time upgrades are 25% cheaper.' },
+  { id: 'permaTony', name: 'PermaTony', icon: '🧑', cost: 15, max: 1, parent: 'freshStart', x: 255, y: 405, desc: 'Tony stays available forever after rebirth.' },
+  { id: 'tonyCaretaker', name: 'Tony Caretaker', icon: '🧑‍🍳', cost: 15, max: 1, parent: 'permaTony', x: 230, y: 535, desc: 'Clicks Tony once per second.' },
+  { id: 'tonyCaretaker2', name: 'Tony Caretaker II', icon: '🏠', cost: 25, max: 1, parent: 'tonyCaretaker', x: 330, y: 580, desc: 'Tony moves 10% slower and gets 3 more auto-clicks per second.' },
+  { id: 'farmingSpeed', name: 'Farming', icon: '🌾', cost: 100, max: 1, parent: 'freshStart', x: 195, y: 60, desc: 'Crops grow 25% faster.' },
+  { id: 'cropMitosis', name: 'Crop Mitosis', icon: '🌿', cost: 250, max: 1, parent: 'farmingSpeed', x: 65, y: 45, desc: '50% chance to plant a second free crop when buying one.' },
+  { id: 'oneMinuteCrops', name: 'Minute Crops', icon: '⏱️', cost: 500, max: 1, parent: 'farmingSpeed', x: 55, y: 165, desc: 'Every crop only takes one minute.' },
+  { id: 'bankingProfit', name: 'Banking', icon: '🏦', cost: 1000, max: 1, parent: 'freshStart', x: 500, y: 185, desc: 'Banking can be up to 2x more profitable.' },
+  { id: 'bankingSafety', name: 'Market Safety', icon: '📊', cost: 2500, max: 1, parent: 'bankingProfit', x: 595, y: 280, desc: 'Market losses cap at 25% and refresh 50% faster.' },
+  { id: 'permaBanking', name: 'Perma Banking', icon: '🔐', cost: 5000, max: 1, parent: 'bankingSafety', x: 585, y: 390, desc: 'Bair Banking stays unlocked after rebirth.' },
+  { id: 'bairFloodEfficiency', name: 'Flood Efficiency', icon: '🌊', cost: 1000, max: 1, parent: 'freshStart', x: 350, y: 500, desc: 'Bair Flood needs 750 manual clicks instead of 1000.' },
+  { id: 'bairOcean', name: 'Bair Ocean', icon: '🌌', cost: 5000, max: 1, parent: 'bairFloodEfficiency', x: 425, y: 590, desc: 'Bair Flood lasts 1.5x longer.' }
+];
+
+function getRU(id) { return Math.max(0, Number(S.rebirthUpgrades && S.rebirthUpgrades[id]) || 0); }
+function getRebirthRequirement() { return Math.floor(10000000000 * Math.pow(1.35, S.totalRebirths || 0) * Math.pow(0.9, getRU('rebirthCost'))); }
+function getRebirthPointBankMult() { return 1 + (1.2 * (1 - Math.exp((-(Number(S.rebirthPoints) || 0)) / 2500))); }
+function getRebirthEarnMult() { return 1 + (getRU('freshStart') * 0.1) + (getRU('profitableKensingers') * 0.9) + (getRU('profitableKensingersPlus') * 0.02) + (getRU('midMomentum') * 0.05); }
+function getBairBarrageClickRequirement() { return getRU('bairFloodEfficiency') ? 750 : 1000; }
+function getBairBarrageDuration() { return (S.bought['up-bair-barrage'] ? 60000 : 30000) * (getRU('bairOcean') ? 1.5 : 1); }
+function getBairBarrageMult() { return S.buffs && S.buffs.bairBarrageUntil > Date.now() ? (S.bought['up-bair-barrage'] ? 5 : 2) : 1; }
+function getPendingRebirthPoints() {
+  const req = getRebirthRequirement();
+  if (S.kensingers < req) return 0;
+  const base = S.kensingers / req;
+  const softened = Math.pow(base, 0.82);
+  return Math.max(1, Math.floor(softened * Math.pow(1.1, getRU('rebirthEfficiency'))));
+}
+
+const STOCK_DEFS = [
+  { id: 'tonyInc', name: 'Tony Inc', seconds: 3, min: -0.10, max: 0.10 },
+  { id: 'swordFarms', name: 'Sword Farms', seconds: 30, min: -0.35, max: 1.50 },
+  { id: 'adkinsAirlines', name: 'Adkins Airlines', seconds: 5, min: -0.70, max: 0.45 }
+];
+function getStockBasePrice(stock) {
+  const clickMinute = getClickPower() * 60;
+  return Math.max(1, Math.floor((getCPS() * stock.seconds) + clickMinute));
+}
+function getStockDef(id) { return STOCK_DEFS.find(stock => stock.id === id); }
+function isBankingUnlocked() { return !!S.bought['up-bair-banking'] || !!getRU('permaBanking'); }
+function getStockPrice(id) {
+  const stock = getStockDef(id);
+  if (!stock) return 1;
+  return Math.max(1, Math.floor(getStockBasePrice(stock) * (S.stocks.prices[id] || 1)));
+}
+function tickStocks() {
+  if (!isBankingUnlocked()) return;
+  const now = Date.now();
+  const interval = getRU('bankingSafety') ? 40000 : 60000;
+  if (now - (S.stocks.lastTick || 0) < interval) return;
+  S.stocks.lastTick = now;
+  STOCK_DEFS.forEach(stock => {
+    const min = getRU('bankingSafety') ? Math.max(stock.min, -0.25) : stock.min;
+    const max = stock.max * (getRU('bankingProfit') ? 2 : 1);
+    const change = min + Math.random() * (max - min);
+    S.stocks.prices[stock.id] = Math.max(0.05, (S.stocks.prices[stock.id] || 1) * (1 + change));
+  });
+}
+function buyStock(id) {
+  const price = getStockPrice(id);
+  if (S.kensingers < price) return;
+  S.kensingers -= price;
+  S.stocks.shares[id] = (S.stocks.shares[id] || 0) + 1;
+  updateUI(); saveGame();
+}
+function sellStock(id) {
+  if ((S.stocks.shares[id] || 0) <= 0) return;
+  S.stocks.shares[id] -= 1;
+  S.kensingers += getStockPrice(id);
+  updateUI(); saveGame();
+}
+function toggleStockPanel() {
+  if (!isBankingUnlocked()) return;
+  S.stockOpen = !S.stockOpen;
+  renderStocks();
+  saveGame();
+}
+
+function syncStockPanelPosition() {
+  const panel = document.getElementById('stock-panel');
+  const farm = document.getElementById('farm-panel');
+  if (!panel || !farm) return;
+  const farmRect = farm.getBoundingClientRect();
+  const baseLeft = 12;
+  const compactGap = 8;
+  const unlocked = farm.classList.contains('unlocked');
+  const targetTop = unlocked
+    ? Math.max(78, Math.min(window.innerHeight - 96, Math.round(farmRect.bottom + compactGap)))
+    : 132;
+  panel.style.left = baseLeft + 'px';
+  panel.style.top = targetTop + 'px';
+}
+function renderStocks() {
+  tickStocks();
+  const panel = document.getElementById('stock-panel');
+  const list = document.getElementById('stock-list');
+  if (!panel || !list) return;
+  panel.classList.toggle('unlocked', isBankingUnlocked());
+  panel.classList.toggle('collapsed', !S.stockOpen);
+  syncStockPanelPosition();
+  if (!isBankingUnlocked()) { list.innerHTML = ''; return; }
+  const status = document.getElementById('stock-status');
+  if (status) status.textContent = 'Prices scale with your current CPS and click power. Buy low, sell high.';
+  list.innerHTML = '';
+  STOCK_DEFS.forEach(stock => {
+    const price = getStockPrice(stock.id);
+    const row = document.createElement('div');
+    row.className = 'stock-row';
+    row.innerHTML = '<span>' + stock.name + '<br><small>' + stock.seconds + 's basis | ' + formatPrice(price) + ' | Own ' + (S.stocks.shares[stock.id] || 0) + '</small></span><button onclick="buyStock(\'' + stock.id + '\')">Buy</button><button onclick="sellStock(\'' + stock.id + '\')">Sell</button>';
+    list.appendChild(row);
+  });
+}
+function getRebirthUpgradeCost(up) {
+  if (up.cost === 0) return 0;
+  const owned = getRU(up.id);
+  let cost = up.cost * Math.pow(1.15, owned);
+  if (up.id === 'retainment' && owned >= 2) cost = 100;
+  return Math.ceil(cost);
+}
+function canBuyRebirthUpgrade(up) {
+  if (up.parent && getRU(up.parent) <= 0) return false;
+  if (getRU(up.id) >= up.max) return false;
+  if (up.cost === 0) return S.totalRebirths > 0;
+  return S.rebirthPoints >= getRebirthUpgradeCost(up);
+}
+function buyRebirthUpgrade(id) {
+  const up = REBIRTH_UPGRADE_DATA.find(u => u.id === id);
+  if (!up || !canBuyRebirthUpgrade(up)) return;
+  const cost = getRebirthUpgradeCost(up);
+  S.rebirthPoints -= cost;
+  S.rebirthUpgrades[id] = getRU(id) + 1;
+  if (id === 'adkinsArsenal') updateShopUI();
+  if (id === 'permaTony' || id === 'tonyCaretaker' || id === 'tonyCaretaker2') ensureTony();
+  renderRebirthUI(); updateUI(); saveGame();
+}
+function renderRebirthUI() {
+  const summary = document.getElementById('rebirth-summary');
+  const tree = document.getElementById('rebirth-tree');
+  const btn = document.getElementById('rebirth-button');
+  if (!summary || !tree || !btn) return;
+  const req = getRebirthRequirement();
+  const pts = getPendingRebirthPoints();
+  summary.innerHTML = 'Rebirth Points: <strong>' + Math.floor(S.rebirthPoints).toLocaleString() + '</strong><br>Rebirths: ' + S.totalRebirths.toLocaleString() + '<br>Requirement: ' + formatPrice(req) + '<br>Points if reborn now: ' + pts.toLocaleString() + '<br>Permanent earnings: ' + formatStat(getRebirthEarnMult()) + 'x<br>Unspent RP bonus: ' + formatStat(getRebirthPointBankMult()) + 'x';
+  const readout = document.getElementById('rebirth-points-readout');
+  if (readout) readout.textContent = Math.floor(S.rebirthPoints).toLocaleString() + ' Rebirth Points';
+  btn.disabled = pts <= 0;
+  btn.textContent = pts > 0 ? ('Rebirth for ' + pts.toLocaleString() + ' point' + (pts === 1 ? '' : 's')) : ('Need ' + formatPrice(req));
+  tree.innerHTML = '';
+  REBIRTH_UPGRADE_DATA.forEach(up => {
+    if (up.parent) drawRebirthLine(tree, up);
+  });
+  REBIRTH_UPGRADE_DATA.forEach(up => {
+    const owned = getRU(up.id), cost = getRebirthUpgradeCost(up);
+    const node = document.createElement('button');
+    node.className = 'rebirth-node' + (owned >= up.max ? ' bought' : '') + (canBuyRebirthUpgrade(up) ? '' : ' locked');
+    node.style.left = up.x + 'px'; node.style.top = up.y + 'px';
+    node.innerHTML = '<span class="node-icon">' + up.icon + '</span><span>' + up.name + '</span><span>' + owned + '/' + up.max + '</span><span>' + (owned >= up.max ? 'MAX' : (cost ? cost + ' RP' : 'FREE')) + '</span>';
+    node.title = up.desc;
+    node.onmouseover = function(){ showTip(node, up.name, getRebirthUpgradeDetails(up), owned >= up.max ? 'MAXED' : (cost ? cost + ' RP' : 'FREE')); };
+    node.onmouseout = hideTip;
+    node.onclick = () => buyRebirthUpgrade(up.id);
+    tree.appendChild(node);
+  });
+}
+function getRebirthUpgradeDetails(up) {
+  const owned = getRU(up.id);
+  const lock = up.parent && getRU(up.parent) <= 0 ? ' Requires ' + REBIRTH_UPGRADE_DATA.find(p => p.id === up.parent).name + '.' : '';
+  return up.desc + ' Owned: ' + owned + '/' + up.max + '.' + lock;
+}
+function drawRebirthLine(tree, up) {
+  const parent = REBIRTH_UPGRADE_DATA.find(u => u.id === up.parent);
+  if (!parent) return;
+  const x1 = parent.x + 39, y1 = parent.y + 39, x2 = up.x + 39, y2 = up.y + 39;
+  const dx = x2 - x1, dy = y2 - y1;
+  const line = document.createElement('div');
+  line.className = 'rebirth-line';
+  line.style.left = x1 + 'px'; line.style.top = y1 + 'px';
+  line.style.width = Math.sqrt(dx * dx + dy * dy) + 'px';
+  line.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
+  tree.appendChild(line);
+}
+function startRebirth() {
+  const points = getPendingRebirthPoints();
+  if (points <= 0) return;
+  const sprite = document.getElementById('kensinger-sprite');
+  const screen = document.getElementById('rebirth-screen');
+  if (sprite) sprite.classList.add('exploding');
+  setTimeout(() => { if (screen) { screen.classList.remove('menu-open'); screen.classList.add('open'); } }, 650);
+  setTimeout(() => finishRebirth(points), 1400);
+}
+function openRebirthMenu() {
+  const screen = document.getElementById('rebirth-screen');
+  if (screen) { screen.classList.add('open'); screen.classList.add('menu-open'); }
+  renderRebirthUI();
+}
+function getRetainedKensingers() { return [0, 1000, 10000, 100000][getRU('retainment')] || 0; }
+function finishRebirth(points) {
+  const keepSettings = Object.assign({}, S.settings);
+  const keepRebirth = Object.assign({}, S.rebirthUpgrades);
+  const oldPoints = Number(S.rebirthPoints) || 0;
+  const oldRebirths = Number(S.totalRebirths) || 0;
+  const retained = getRetainedKensingers();
+  Object.assign(S, getBaseStatePatch());
+  S.settings = keepSettings;
+  S.rebirthUpgrades = keepRebirth;
+  if (getRU('permaBanking')) S.bought['up-bair-banking'] = true;
+  S.rebirthPoints = oldPoints + points;
+  S.totalRebirths = oldRebirths + 1;
+  S.kensingers = retained;
+  clearFlyingSpecials(); clearTonyAndPepperonis(); buildAdkinsRing(0); ensureTony();
+  const sprite = document.getElementById('kensinger-sprite');
+  const screen = document.getElementById('rebirth-screen');
+  if (sprite) sprite.classList.remove('exploding');
+  if (screen) { screen.classList.add('open'); screen.classList.add('menu-open'); }
+  renderRebirthUI(); updateFarmUI(); updateUI(); saveGame();
+}
+function closeRebirthMenu() {
+  const screen = document.getElementById('rebirth-screen');
+  if (screen) { screen.classList.remove('open'); screen.classList.remove('menu-open'); }
+  setTab('shop');
+  updateUI();
+  saveGame();
+}
+function getShopCostMult() { return Math.pow(0.9, getRU('cuttingCosts')) * Math.pow(0.97, getRU('midWorkshop')); }
+function getOneTimeCostMult() { return getRU('oneTimeDiscount') ? 0.75 : 1; }
+function getOneTimeUpgradeCost(cost, id) { if (id === 'up-bair-banking') return cost; return Math.floor(cost * getOneTimeCostMult()); }
+function getAssistantCap() { return 100 + getRU('adkinsArsenal') * 10; }
+function getBairPowerBonus() { return S.bairPowerOwned * 12500 * Math.pow(2, (S.bought['up-bair-booster-1'] ? 1 : 0) + (S.bought['up-bair-booster-2'] ? 1 : 0)); }
+function getBairBankClickBonus() { return S.bairBankOwned * 10000; }
+function getBairBankCpsBonus() { return S.bairBankOwned * 1000000; }
+function getAdkinsCritChance() { return getRU('adkinsAccuracy') * 0.001; }
+function getAdkinsEfficiencyMult() { return S.buffs.adkinsEfficiencyUntil > Date.now() ? 2 : 1; }
+function getClickBoostMult() { return S.buffs.clickBoostUntil > Date.now() ? 10 : 1; }
+function getBairBarragePeakHeight() { return Math.max(1, Math.round(window.innerHeight * 0.85)); }
+function easeOutCubic(t) { const x = Math.max(0, Math.min(1, t)); return 1 - Math.pow(1 - x, 3); }
+function syncBairBarrageMeterPosition() {
+  const meter = document.getElementById('bair-barrage-meter');
+  const sprite = document.getElementById('kensinger-sprite');
+  if (!meter) return;
+  let centerX = window.innerWidth / 2;
+  if (sprite) {
+    const rect = sprite.getBoundingClientRect();
+    centerX = rect.left + (rect.width / 2);
+  }
+  meter.style.left = Math.max(12, Math.min(window.innerWidth - 12, centerX)) + 'px';
+}
+function scheduleBairBarrageFrame() {
+  if (_bairBarrageFrame) return;
+  const step = () => {
+    _bairBarrageFrame = 0;
+    updateBairFloodUI();
+    if (S.buffs.bairBarrageUntil > Date.now() || _bairBarrageWasActive) {
+      _bairBarrageFrame = requestAnimationFrame(step);
+    }
+  };
+  _bairBarrageFrame = requestAnimationFrame(step);
+}
+function triggerBairBarrage() {
+  const now = Date.now();
+  S.buffs.bairBarrageUntil = now + getBairBarrageDuration();
+  _bairBarrageStartedAt = now;
+  const flood = document.getElementById('bair-flood');
+  const sprite = document.getElementById('bair-barrage-sprite');
+  if (flood) { flood.style.backgroundImage = 'url("' + BAIR_FLOOD_IMG + '")'; flood.classList.add('active'); }
+  if (sprite) { sprite.src = BAIR_IMG; sprite.classList.add('active'); sprite.classList.remove('falling'); }
+  _bairBarrageWasActive = true;
+  _bairBarrageHasTriggeredOnce = true;
+  scheduleBairBarrageFrame();
+  updateBairFloodUI();
+}
+// ═══════════════════════════════════════════════════════════
+//  DERIVED STATS (live, dynamic)
+// ═══════════════════════════════════════════════════════════
+function getGloveMult()    { return S.bought['up-glove']      ? 5 : 1; }
+function getClassBase()    { return S.bought['up-class-focus'] ? 100 : (S.bought['up-industrial'] ? 10 : 5); }
+function getFreshmanMult() { return S.bought['up-freshman']    ? 0.5 : 1; } // adkins interval divisor
+function getAutoBase() { return S.cursorEfficiency + (S.bought['up-auto-engine'] ? 8.6 : 0); }
+function getAutoSynergyMult() { return S.bought['up-auto-engine'] ? 1 + (S.autoOwned * 0.01) : 1; }
+function getAutoDiscountMult() { return S.bought['up-class-focus'] ? Math.max(0.9, 1 - (S.classOwned * 0.001)) : 1; }
+function getEffectiveBasePrice(type, base) { return (type === 'auto' ? base * getAutoDiscountMult() : base) * getShopCostMult(); }
+function formatBigNumber(value, forceInteger) {
+  const n = forceInteger ? Math.floor(value) : value;
+  if (!S.settings.priceAbbreviations) return forceInteger ? Math.floor(n).toLocaleString() : n.toLocaleString();
+  const abs = Math.abs(n);
+  const units = [{ v: 1e15, s: 'Qa' }, { v: 1e12, s: 'T' }, { v: 1e9, s: 'B' }, { v: 1e6, s: 'M' }, { v: 1e3, s: 'K' }];
+  for (const unit of units) {
+    if (abs >= unit.v) {
+      const scaled = n / unit.v;
+      const digits = Math.abs(scaled) < 10 ? 2 : (Math.abs(scaled) < 100 ? 1 : 0);
+      return scaled.toFixed(digits) + unit.s;
+    }
+  }
+  return forceInteger ? Math.floor(n).toLocaleString() : n.toLocaleString();
+}
+function formatPrice(value) { return formatBigNumber(value, true); }
+function formatStat(value) { return S.settings.roundedDisplay ? Math.round(value).toLocaleString() : value.toFixed(2); }
+function formatShopStat(value) {
+  return S.settings.priceAbbreviations ? formatBigNumber(value, S.settings.roundedDisplay) : (S.settings.roundedDisplay ? Math.round(value).toLocaleString() : value.toFixed(2));
+}
+function getPiratesMult()  { return S.bought['up-pirates']     ? piratesMultiplier : 1; }
+function getPermanentMult() { return S.permMultiplier || 1; }
+function getBonusStackMult() { return getPermanentMult() * getRebirthEarnMult() * getRebirthPointBankMult(); }
+function getTotalPermanentMult() { return getBonusStackMult(); }
+function getTemporaryMult() { syncBuffs(); return S.multiplier * goldMult * greenMult * getSpecialBenefitMult() * getBairBarrageMult(); }
+function getEffectiveMult() { return getTemporaryMult() * getTotalPermanentMult(); }
+function getSpecialBenefitMult() { return S.buffs.specialBoostUntil > Date.now() && (goldMult > 1 || greenMult > 1) ? 2 : 1; }
+function getFarmCpsMult()  { syncBuffs(); return S.buffs.cpsBoostUntil > Date.now() ? S.buffs.cpsBoostAmount : 1; }
+
+function getClickPower() {
+  const glove = getGloveMult();
+  return ((1 + S.clickOwned) * glove + getBairPowerBonus() + getBairBankClickBonus() + (S.bought['up-tony-town'] ? 1000000 : 0)) * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult() * getClickBoostMult();
+}
+
+function getCPS() {
+  syncBuffs();
+  if (S.buffs.cpsPenaltyUntil > Date.now()) return 0;
+  const cb = getClassBase();
+  const base = (S.autoOwned * getAutoBase()) + (S.classOwned * cb * getAutoSynergyMult()) + (S.biologyOwned * 2500 * getAutoSynergyMult()) + getBairBankCpsBonus() + (S.bought['up-tony-town'] ? 1000000000 : 0);
+  return base * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
+}
+function getCpsRewardBase() {
+  syncBuffs();
+  if (S.buffs.cpsPenaltyUntil > Date.now()) return 0;
+  const cb = getClassBase();
+  const base = (S.autoOwned * getAutoBase()) + (S.classOwned * cb * getAutoSynergyMult()) + (S.biologyOwned * 2500 * getAutoSynergyMult()) + getBairBankCpsBonus() + (S.bought['up-tony-town'] ? 1000000000 : 0);
+  const cappedTemporary = Math.min((S.multiplier || 1) * goldMult * greenMult * getSpecialBenefitMult() * getBairBarrageMult(), 3);
+  return base * cappedTemporary * getTotalPermanentMult() * getPiratesMult() * getFarmCpsMult();
+}
+
+// effective click-per-second label for auto (single unit contribution)
+function getSingleAutoContrib() {
+  return getAutoBase() * getEffectiveMult() * getPiratesMult();
+}
+function getSingleClassContrib() {
+  return getClassBase() * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
+}
+function getSingleBiologyContrib() {
+  return 2500 * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
+}
+function getSingleClickContrib() {
+  return getGloveMult() * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult(); // single Click Power upgrade contribution
+}
+function getBairPowerDisplayBonus() {
+  return 12500 * Math.pow(2, (S.bought['up-bair-booster-1'] ? 1 : 0) + (S.bought['up-bair-booster-2'] ? 1 : 0)) * getEffectiveMult() * getPiratesMult() * getClickBoostMult();
+}
+function getBairBankDisplayClickBonus() {
+  return 10000 * getEffectiveMult() * getPiratesMult() * getClickBoostMult();
+}
+function getBairBankDisplayCpsBonus() {
+  return 1000000 * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BELTON PIRATES — smooth CPS multiplier
+// ═══════════════════════════════════════════════════════════
+const MAX_CPS_FOR_PIRATES = 10; // clicks/sec for full 2x
+
+function recordManualClick() {
+  const now = Date.now();
+  manualClickTimestamps.push(now);
+  if (S.buffs.bairBarrageUntil <= now) {
+    S.manualClickCount = (S.manualClickCount || 0) + 1;
+    if (S.manualClickCount % getBairBarrageClickRequirement() === 0) triggerBairBarrage();
+  }
+  // keep only last 2 seconds
+  const cutoff = now - 2000;
+  manualClickTimestamps = manualClickTimestamps.filter(t => t > cutoff);
+}
+
+function computeManualCPS() {
+  const now = Date.now();
+  const cutoff = now - 1000;
+  return manualClickTimestamps.filter(t => t > cutoff).length;
+}
+
+// Smoothly move piratesMultiplier toward target
+setInterval(() => {
+  if (!S.bought['up-pirates']) { piratesMultiplier = 1.0; return; }
+  const cps = computeManualCPS();
+  const ratio = Math.min(cps / MAX_CPS_FOR_PIRATES, 1.0);
+  const target = 1.0 + ratio; // 1.0 → 2.0
+  const speed  = 0.05; // ease factor per tick (50ms)
+  piratesMultiplier += (target - piratesMultiplier) * speed;
+  // decay toward 1 if no clicks
+  if (cps === 0) piratesMultiplier += (1.0 - piratesMultiplier) * speed;
+}, 50);
+
+// ═══════════════════════════════════════════════════════════
+//  CLICK LOGIC
+// ═══════════════════════════════════════════════════════════
+const kensingerSprite = document.getElementById('kensinger-sprite');
+let spaceHeld = false;
+
+function doClick(isManual) {
+  if (isManual) recordManualClick();
+  S.kensingers += getClickPower();
+  if (S.officeOwned > 0) {
+    let chance = S.officeOwned * 0.001 * getBairBarrageMult();
+    if (S.bought['up-apocalypse']) chance *= 0.5;
+    if (Math.random() < chance) {
+      spawnSpecial('gold');
+    }
+  }
+  updateUI();
+  saveGame();
+}
+
+function manualClick() { doClick(true); }
+
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !spaceHeld) {
+    e.preventDefault();
+    spaceHeld = true;
+    doClick(true);
+    kensingerSprite.classList.add('active-scale');
+  }
+});
+window.addEventListener('keyup', e => {
+  if (e.code === 'Space') {
+    spaceHeld = false;
+    kensingerSprite.classList.remove('active-scale');
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  PASSIVE INCOME
+// ═══════════════════════════════════════════════════════════
+setInterval(() => {
+  S.kensingers += getCPS();
+  updateUI();
+  saveGame();
+}, 1000);
+
+// ═══════════════════════════════════════════════════════════
+//  SHOP
+// ═══════════════════════════════════════════════════════════
+let buyMode = 1;
+
+function setAmount(amt) {
+  buyMode = amt;
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tog' + (amt === 'all' ? 'All' : amt)).classList.add('active');
+  updateShopUI();
+}
+
+function getBulkCost(base, owned, amount) {
+  if (amount <= 0) return 0;
+  return Math.floor(base * (Math.pow(GROWTH, owned) * (Math.pow(GROWTH, amount) - 1)) / (GROWTH - 1));
+}
+function getMaxAffordable(base, owned, money) {
+  if (money < Math.floor(base * Math.pow(GROWTH, owned))) return 0;
+  return Math.floor(Math.log(((money * (GROWTH - 1)) / (base * Math.pow(GROWTH, owned))) + 1) / Math.log(GROWTH));
+}
+
+function buy(type, base) {
+  const caps   = { office: 10, assistant: getAssistantCap() };
+  const owned  = S[type + 'Owned'];
+  base = getEffectiveBasePrice(type, base);
+  let amount   = buyMode === 'all' ? getMaxAffordable(base, owned, S.kensingers) : buyMode;
+  if (caps[type]) amount = Math.min(amount, caps[type] - owned);
+  const cost   = getBulkCost(base, owned, amount);
+  if (S.kensingers >= cost && amount > 0) {
+    S.kensingers -= cost;
+    S[type + 'Owned'] += amount;
+    if (type === 'assistant') buildAdkinsRing(S.assistantOwned);
+    updateUI();
+    saveGame();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UPGRADES
+// ═══════════════════════════════════════════════════════════
+const UPGRADES = [
+  { id: 'up-pointer',    cost: 100,    showAt: 0      },
+  { id: 'up-glove',      cost: 500,    showAt: 300    },
+  { id: 'up-farm',       cost: 1500,   showAt: 1000   },
+  { id: 'up-auto-engine', cost: 3500, showAt: 2500 },
+  { id: 'up-crown',      cost: 5000,   showAt: 4000   },
+  { id: 'up-industrial', cost: 10000,  showAt: 8000   },
+  { id: 'up-class-focus', cost: 25000, showAt: 18000 },
+  { id: 'up-dividends',  cost: 50000,  showAt: 40000  },
+  { id: 'up-gamma',      cost: 50000,  showAt: 45000  },
+  { id: 'up-pirates',    cost: 100000, showAt: 80000  },
+  { id: 'up-freshman',   cost: 250000, showAt: 200000 },
+  { id: 'up-todd-class', cost: 1000000, showAt: 750000 },
+  { id: 'up-todd-farm',  cost: 10000000, showAt: 8000000 },
+  { id: 'up-crop-speed', cost: 25000000, showAt: 20000000 },
+  { id: 'up-cross-breeding', cost: 50000000, showAt: 40000000 },
+  { id: 'up-adkins-net-1', cost: 100000000, showAt: 75000000 },
+  { id: 'up-adkins-net-2', cost: 250000000, showAt: 180000000 },
+  { id: 'up-bairllion', cost: 1000000000, showAt: 700000000 },
+  { id: 'up-apocalypse', cost: 2500000000, showAt: 1500000000 },
+  { id: 'up-friend', cost: 2500000000, showAt: 1500000000 },
+  { id: 'up-better-friend', cost: 10000000000, showAt: 7500000000 },
+  { id: 'up-best-friend', cost: 25000000000, showAt: 18000000000 },
+  { id: 'up-bair-booster-1', cost: 25000000000, showAt: 18000000000 },
+  { id: 'up-bair-booster-2', cost: 125000000000, showAt: 90000000000 },
+  { id: 'up-adkins-acceleration', cost: 250000000000, showAt: 175000000000 },
+  { id: 'up-bair-barrage', cost: 250000000000, showAt: 175000000000 },
+  { id: 'up-bair-banking', cost: 1000000000000, showAt: 700000000000 },
+  { id: 'up-tony-town', cost: 10000000000000, showAt: 7000000000000 },
+];
+const UPGRADE_INFO = {
+  'up-pointer': ['Getting Started', () => 'Doubles Auto-Kensinger speed. Current single Auto-Kensinger: ' + formatStat(getSingleAutoContrib()) + '/s.'],
+  'up-glove': ['Golden Glove', () => 'Manual clicks become 5x stronger. Current click power: ' + formatStat(getClickPower()) + '.'],
+  'up-farm': ['Kensing Farm', () => 'Adds +0.5 base CPS before global multipliers. Effective extra: ' + formatStat(0.5 * getEffectiveMult() * getPiratesMult()) + '/s.'],
+  'up-auto-engine': ['Auto Engine', () => 'Auto-Kensingers gain +8.6 base CPS and each Auto boosts Click/Class/Biology by 1%.'],
+  'up-crown': ['Royalty', () => 'Adds a permanent 2x global multiplier. Current permanent stack: ' + formatStat(getPermanentMult()) + 'x. Current total permanent multiplier: ' + formatStat(getTotalPermanentMult()) + 'x.'],
+  'up-industrial': ['Industrialization', () => 'Kensinger Class base increases from 5 to 10 CPS before global multipliers.'],
+  'up-class-focus': ['Class Focus', () => 'Kensinger Class becomes 100 base CPS and classes discount Auto-Kensingers up to 10%.'],
+  'up-dividends': ['Golden Dividends', () => 'Gold Kensingers grant 60 seconds of current CPS: ' + formatPrice(getCPS() * 60) + '.'],
+  'up-gamma': ['Gamma Radiation', () => 'Unlocks Green Kensingers for a 10x temporary multiplier.'],
+  'up-pirates': ['Belton Pirates', () => 'Up to 2x gains from manual clicks. Current Pirates multiplier: ' + formatStat(getPiratesMult()) + 'x.'],
+  'up-freshman': ['Freshman Office', () => 'Adkins auto-click twice as fast.'],
+  'up-todd-class': ['Todd Sword Class', () => 'Unlocks Biology Packet. Current single Biology Packet would give ' + formatStat(getSingleBiologyContrib()) + '/s.'],
+  'up-todd-farm': ['Todd Sword Farm', () => 'Unlocks the expandable crop farm. Crop costs and rewards scale from current CPS.'],
+  'up-crop-speed': ['Packet Fertilizer', () => 'All crops finish 10 seconds faster.'],
+  'up-cross-breeding': ['Cross Breeding', () => 'Allows hidden crop discoveries through farm patterns.'],
+  'up-adkins-net-1': ['Adkins Net 1', () => 'Spreads Adkins out by 1%.'],
+  'up-adkins-net-2': ['Adkins Net 2', () => 'Spreads Adkins out by 1%.'],
+  'up-friend': ['Friend', () => 'Adds Tony. Click Tony for current click power: ' + formatStat(getClickPower()) + '.'],
+  'up-better-friend': ['Better Friend', () => 'Pepperoni chance improves to 1/90 and Tony moves 10% slower.'],
+  'up-best-friend': ['Best Friend', () => 'Pepperoni chance improves to 1/50 and every 10 claimed pepperonis spawns a golden pepperoni.'],
+  'up-bairllion': ['A Bairllion', () => 'Adds a permanent 2x global multiplier to everything. Current permanent stack: ' + formatStat(getPermanentMult()) + 'x. Current total permanent multiplier: ' + formatStat(getTotalPermanentMult()) + 'x.'],
+  'up-bair-booster-1': ['Bair Booster 1', () => 'Doubles Bair Power. Current Bair Power bonus: +' + formatStat(getBairPowerBonus()) + ' click base.'],
+  'up-bair-booster-2': ['Bair Booster 2', () => 'Doubles Bair Power again. Current Bair Power bonus: +' + formatStat(getBairPowerBonus()) + ' click base.'],
+  'up-adkins-acceleration': ['Adkins Acceleration', () => 'Adkins click 2x faster.'],
+  'up-bair-barrage': ['Bair Barrage', () => 'Manual clicks start a 2x event for 30 seconds, or 5x for 60 seconds after buying the upgrade. Clicks left: ' + (getBairBarrageClickRequirement() - ((S.manualClickCount || 0) % getBairBarrageClickRequirement())).toLocaleString() + '.'],
+  'up-apocalypse': ['Kensinger Apocalypse', () => 'Green Kensingers spawn 50% of the time from special clicks, special-click spawns are halved, and green Kensingers grant 120 seconds of CPS.'],
+  'up-bair-banking': ['Bair Banking', () => 'Unlocks the Bair Banking HUD. Stock prices scale with current CPS plus 60 seconds of clicking.']
+  ,'up-tony-town': ['Tony Town', () => 'Adds +1B CPS and +1M click power, then spawns mini Tonys that collect specials and pepperonis.']
+};
+
+function buyUpgrade(id, cost, stat, value, type) {
+  cost = getOneTimeUpgradeCost(cost, id);
+  if (S.kensingers < cost || S.bought[id]) return;
+  S.kensingers -= cost;
+  S.bought[id]  = true;
+
+  if (stat === 'all') {
+    S.cursorEfficiency *= value;
+  } else if (stat === 'cursorEfficiency') {
+    S.cursorEfficiency = type === 'multiply' ? S.cursorEfficiency * value : S.cursorEfficiency + value;
+  }
+  if (id === 'up-crown') S.permMultiplier = (S.permMultiplier || 1) * 2;
+  if (id === 'up-bairllion') S.permMultiplier = (S.permMultiplier || 1) * 2;
+  // 'flag' types just set the bought flag, logic reads S.bought elsewhere
+  // Special: freshman office — rebuild ring at new speed
+  if (id === 'up-freshman' || id === 'up-adkins-acceleration' || id === 'up-adkins-net-1' || id === 'up-adkins-net-2') buildAdkinsRing(S.assistantOwned);
+  if (id === 'up-friend' || id === 'up-better-friend' || id === 'up-best-friend') ensureTony();
+  if (id === 'up-tony-town') ensureMiniTonys();
+  if (id === 'up-todd-farm') { S.farmOpen = true; updateFarmUI(); }
+  if (id === 'up-cross-breeding') { updateFarmUI(); }
+
+  hideTip();
+  updateUI();
+  saveGame();
+}
+
+function showTip(el, name, desc, price) {
+  const tt = document.getElementById('up-tooltip');
+  document.getElementById('tt-name').textContent  = name;
+  document.getElementById('tt-desc').textContent  = desc;
+  document.getElementById('tt-price').textContent = 'Cost: ' + (typeof price === 'number' ? formatPrice(price) : price);
+  const r = el.getBoundingClientRect();
+  tt.style.left    = (r.left + r.width / 2 - 80) + 'px';
+  tt.style.top     = (r.bottom + 8) + 'px';
+  tt.style.display = 'block';
+}
+function hideTip() { document.getElementById('up-tooltip').style.display = 'none'; }
+
+function setUpgradeImage(id, src, alt) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  let img = btn.querySelector('img');
+  if (!img) {
+    btn.textContent = '';
+    img = document.createElement('img');
+    img.style.width = '28px';
+    img.style.height = '28px';
+    img.style.borderRadius = '50%';
+    img.style.objectFit = 'cover';
+    btn.appendChild(img);
+  }
+  img.src = src;
+  img.alt = alt;
+}
+
+function applyUpgradeArt() {
+  ['up-bairllion','up-bair-booster-1','up-bair-booster-2','up-bair-barrage','up-bair-banking'].forEach(id => setUpgradeImage(id, BAIR_IMG, 'Bair'));
+  ['up-todd-class','up-todd-farm','up-crop-speed','up-cross-breeding'].forEach(id => setUpgradeImage(id, TODD_IMG, 'Todd Sword'));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DEVELOPER MODE
+// ═══════════════════════════════════════════════════════════
+const DEV_CODES = ['!DEV','!TEST','!DEVELOPER','!ADMIN','!OWNER'];
+function enableDevMode() {
+  S.devMode = true;
+  updateDevModeUI();
+  saveGame();
+}
+function updateDevModeUI() {
+  const badge  = document.getElementById('dev-mode-badge');
+  const panel  = document.getElementById('dev-panel');
+  if (badge)  badge.classList.toggle('active', !!S.devMode);
+  if (panel)  panel.classList.toggle('active', !!S.devMode);
+}
+function toggleDevPanel() {
+  if (!S.devMode) return;
+  const panel = document.getElementById('dev-panel');
+}
+function devSetMoney() {
+  if (!S.devMode) return;
+  const input = document.getElementById('dev-money-input');
+  const value = parseFloat(input.value);
+  if (!isNaN(value)) S.kensingers = Math.max(0, value);
+  updateUI(); saveGame();
+}
+function devAddMoney(amount) {
+  if (!S.devMode) return;
+  S.kensingers += amount;
+  updateUI(); saveGame();
+}
+function devSpeedCrops() {
+  if (!S.devMode) return;
+  normalizeFarmPlots();
+  S.farmPlots.forEach(plot => {
+    if (plot) { normalizeCropProgress(plot); plot.growTicksDone = Math.min(plot.growTicksRequired, plot.growTicksDone + Math.ceil(getCropRemainingTicks(plot) * 0.95)); }
+  });
+  updateUI(); saveGame();
+}
+function devReadyCrops() {
+  if (!S.devMode) return;
+  normalizeFarmPlots();
+  S.farmPlots.forEach(plot => { if (plot) { normalizeCropProgress(plot); plot.growTicksDone = plot.growTicksRequired; } });
+  updateUI(); saveGame();
+}
+function devUnlockFarm() {
+  if (!S.devMode) return;
+  S.bought['up-todd-farm'] = true;
+  S.farmOpen = true;
+  updateUI(); saveGame();
+}
+function devRevealCrops() {
+  if (!S.devMode) return;
+  S.unlockedCrops.kensingerCarrot = true;
+  S.unlockedCrops.swordBloom = true;
+  updateUI(); saveGame();
+}
+function devUnlockAll() {
+  if (!S.devMode) return;
+  S.bought['up-todd-farm'] = true;
+  S.bought['up-todd-class'] = true;
+  S.bought['up-cross-breeding'] = true;
+  S.bought['up-crop-speed'] = true;
+  S.farmOpen = true;
+  S.unlockedCrops.kensingerCarrot = true;
+  S.unlockedCrops.swordBloom = true;
+  buildAdkinsRing(S.assistantOwned);
+  updateFarmUI(); updateUI(); saveGame();
+}
+function devGiveAllUpgrades() {
+  if (!S.devMode) return;
+  UPGRADES.forEach(function(up) {
+    if (!S.bought[up.id]) {
+      S.kensingers = Math.max(S.kensingers, up.cost);
+      buyUpgrade(up.id, up.cost, 'flag', 0, 'none');
+    }
+  });
+  updateUI(); saveGame();
+}
+// ═══════════════════════════════════════════════════════════
+//  SECRET CODES
+// ═══════════════════════════════════════════════════════════
+function showCodeMsg(text, type) {
+  const el = document.getElementById('code-msg');
+  el.textContent = text;
+  el.className   = type === 'ok' ? 'msg-ok' : 'msg-err';
+  setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+function redeemCode() {
+  const input    = document.getElementById('code-input');
+  const rawInput = input.value.trim();
+  const code     = rawInput.toUpperCase();
+  input.value    = '';
+
+  if (DEV_CODES.includes(code)) {
+    enableDevMode();
+    showCodeMsg('DEVELOPER MODE ENABLED!', 'ok');
+  } else if (code === 'TONY') {
+    if (S.codes['TONY']) return showCodeMsg('TONY ALREADY VISITED!', 'err');
+    S.codes['TONY'] = true;
+    showCodeMsg('TONY IS COMING...', 'ok');
+    let c = 0;
+    const t = setInterval(() => {
+      spawnSpecial('gold'); c++;
+      if (c >= 5) { clearInterval(t); setTimeout(() => spawnSpecial('green'), 1000); }
+    }, 1000);
+  } else if (code === 'KENSINGER') {
+    if (S.codes['KENSINGER']) return showCodeMsg('ALREADY USED!', 'err');
+    S.codes['KENSINGER'] = true;
+    activateBuff(2, 60000);
+    showCodeMsg('2X BOOST ACTIVATED (60s)!', 'ok');
+  } else if (code === '907') {
+    if (S.codes['907']) return showCodeMsg('ALREADY USED!', 'err');
+    S.codes['907'] = true;
+    S.kensingers += 907;
+    showCodeMsg('+907 KENSINGERS!', 'ok');
+  } else if (code === 'PEPPERONI') {
+    if (S.codes['PEPPERONI']) return showCodeMsg('ALREADY USED!', 'err');
+    S.codes['PEPPERONI'] = true;
+    S.autoOwned  += 10;
+    S.clickOwned += 2;
+    showCodeMsg('PEPPERONI PARTY!', 'ok');
+    buildAdkinsRing(S.assistantOwned);
+  } else {
+    showCodeMsg('INVALID CODE!', 'err');
+  }
+  updateUI(); saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SAVE / EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════
+function showSaveMsg(text, type) {
+  const el = document.getElementById('save-msg');
+  el.textContent = text;
+  el.className   = type === 'ok' ? 'msg-ok' : 'msg-err';
+  setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+function exportSave() {
+  try {
+    updateRuntimeSaveState();
+    const encoded = btoa(JSON.stringify(S));
+    document.getElementById('import-area').value = encoded;
+    showSaveMsg('Save code generated! Copy the text above.', 'ok');
+  } catch(e) { showSaveMsg('Export failed.', 'err'); }
+}
+
+function importSave() {
+  try {
+    const raw = document.getElementById('import-area').value.trim();
+    if (!raw) { showSaveMsg('Paste a save code first!', 'err'); return; }
+    const parsed = JSON.parse(atob(raw));
+    clearFlyingSpecials(); clearTonyAndPepperonis();
+    Object.assign(S, parsed);
+    normalizeSaveState();
+    restorePausedCropTimers();
+    syncBuffs();
+    scheduleBuffTimers();
+    buildAdkinsRing(S.assistantOwned);
+    restoreFlyingSpecials();
+    applyTheme();
+    updateUI(); saveGame();
+    showSaveMsg('Save imported successfully!', 'ok');
+  } catch(e) { showSaveMsg('Invalid save code.', 'err'); }
+}
+
+function resetSave()       { document.getElementById('reset-modal').classList.add('open'); }
+function closeResetModal() { document.getElementById('reset-modal').classList.remove('open'); }
+function doReset() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+  [goldTimer, greenTimer, boostTimer, cpsPenaltyTimer, cpsBoostTimer, specialBlockTimer, specialBoostTimer].forEach(t => { if (t) clearTimeout(t); });
+  goldTimer = greenTimer = boostTimer = cpsPenaltyTimer = cpsBoostTimer = specialBlockTimer = specialBoostTimer = null;
+  clearFlyingSpecials(); clearTonyAndPepperonis();
+  Object.assign(S, getBaseStatePatch());
+  goldMult = 1; greenMult = 1;
+  manualClickTimestamps = []; piratesMultiplier = 1.0;
+  document.querySelectorAll('.up-btn').forEach(b => { b.style.display='none'; b.classList.remove('pulsing'); });
+  buildAdkinsRing(0);
+  applyTheme();
+  updateFarmUI();
+  closeResetModal();
+  updateUI();
+  saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BUFFS / SPECIALS
+// ═══════════════════════════════════════════════════════════
+function activateBuff(amt, duration) {
+  const until = Date.now() + duration;
+  if (amt === 3) {
+    S.buffs.goldUntil = until;
+  } else if (amt === 10) {
+    S.buffs.greenUntil = until;
+  } else {
+    S.buffs.boostAmount = amt;
+    S.buffs.boostUntil = until;
+  }
+  syncBuffs();
+  scheduleBuffTimers();
+  updateUI();
+  saveGame();
+}
+
+const flightIntervals = new WeakMap();
+const flightEntries   = new WeakMap();
+const collected       = new WeakSet();
+let flyingSpecials    = [];
+
+function updateFlyingSaveState() {
+  enforceSpecialCap();
+  S.flying = flyingSpecials
+    .filter(entry => entry.el && document.body.contains(entry.el) && !collected.has(entry.el))
+    .slice(0, SPECIAL_KENSINGER_CAP)
+    .map(entry => ({ type: entry.type, left: entry.pos, top: entry.top }));
+}
+
+function getActiveSpecialCount() {
+  return document.querySelectorAll('.special-kensinger').length;
+}
+
+function enforceSpecialCap() {
+  while (flyingSpecials.length > SPECIAL_KENSINGER_CAP) {
+    const entry = flyingSpecials[0];
+    if (!entry) break;
+    if (entry.interval) clearInterval(entry.interval);
+    if (entry.el && entry.el.remove) entry.el.remove();
+    flyingSpecials.shift();
+  }
+  const extras = Array.from(document.querySelectorAll('.special-kensinger')).slice(SPECIAL_KENSINGER_CAP);
+  extras.forEach(el => removeSpecialElement(el));
+}
+
+function removeSpecialElement(el) {
+  const entry = flightEntries.get(el);
+  if (entry) {
+    if (entry.interval) clearInterval(entry.interval);
+    flyingSpecials = flyingSpecials.filter(item => item !== entry);
+  } else {
+    const iv = flightIntervals.get(el);
+    if (iv) clearInterval(iv);
+  }
+  if (el && el.remove) el.remove();
+  updateFlyingSaveState();
+}
+
+function clearFlyingSpecials() {
+  flyingSpecials.forEach(entry => {
+    if (entry.interval) clearInterval(entry.interval);
+    if (entry.el && entry.el.remove) entry.el.remove();
+  });
+  document.querySelectorAll('.special-kensinger').forEach(el => el.remove());
+  flyingSpecials = [];
+  S.flying = [];
+}
+
+function restoreFlyingSpecials() {
+  const saved = Array.isArray(S.flying) ? S.flying.slice(0, SPECIAL_KENSINGER_CAP) : [];
+  S.flying = [];
+  saved.forEach(item => spawnSpecial(item.type, item));
+  updateFlyingSaveState();
+}
+
+function spawnSpecial(type, saved) {
+  syncBuffs();
+  if (!saved && S.buffs.specialBlockUntil > Date.now()) return;
+  if (!saved && getActiveSpecialCount() >= SPECIAL_KENSINGER_CAP) return;
+  if (saved && getActiveSpecialCount() >= SPECIAL_KENSINGER_CAP) return;
+  if (!saved && type === 'gold' && S.bought['up-apocalypse'] && Math.random() < 0.5) type = 'green';
+  const kens        = document.createElement('img');
+  kens.src          = 'https://resources.finalsite.net/images/f_auto,q_auto,t_image_size_1/v1752781420/beltonschoolsorg/mn7sesas4wdsvbhftsjb/KensingerHeadshot.png';
+  kens.className    = 'special-kensinger ' + (type === 'gold' ? 'gold-filter size-gold' : 'green-filter size-green');
+  kens.dataset.type = type;
+  const top         = saved && typeof saved.top === 'number' ? saved.top : Math.random() * (window.innerHeight - 100);
+  const startLeft   = saved && typeof saved.left === 'number' ? saved.left : -100;
+  kens.style.top    = top + 'px';
+  kens.style.left   = startLeft + 'px';
+  document.body.appendChild(kens);
+
+  const entry = { el: kens, type, top, pos: startLeft, interval: null };
+  const interval = setInterval(() => {
+    entry.pos += 3; kens.style.left = entry.pos + 'px';
+    if (entry.pos > window.innerWidth) removeSpecialElement(kens);
+  }, 10);
+  entry.interval = interval;
+  flightIntervals.set(kens, interval);
+  flightEntries.set(kens, entry);
+  flyingSpecials.push(entry);
+  updateFlyingSaveState();
+
+  kens.onclick = () => {
+    if (collected.has(kens)) return;
+    collected.add(kens);
+    removeSpecialElement(kens);
+    collectSpecialReward(type);
+  };
+}
+
+function collectSpecialReward(type) {
+  if (type === 'gold') {
+    if (S.bought['up-dividends']) {
+      S.kensingers += getCpsRewardBase() * 60;
+    }
+    activateBuff(3, 15000);
+  } else {
+    if (S.bought['up-apocalypse']) {
+      S.kensingers += getCpsRewardBase() * 120;
+    }
+    activateBuff(10, 5000);
+  }
+  updateUI(); saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TONY / PEPPERONIS
+// ═══════════════════════════════════════════════════════════
+let tonyEl = null, tonyTimer = null, tonyX = 160, tonyY = 160, tonyVX = 2, tonyVY = 1.6;
+let miniTonys = [], miniTonyTimer = null;
+function clearTonyAndPepperonis() {
+  if (tonyTimer) clearInterval(tonyTimer);
+  if (miniTonyTimer) clearInterval(miniTonyTimer);
+  if (adkinsEngineTimer) clearInterval(adkinsEngineTimer);
+  tonyTimer = null;
+  miniTonyTimer = null;
+  adkinsEngineTimer = null;
+  if (tonyEl && tonyEl.remove) tonyEl.remove();
+  tonyEl = null;
+  miniTonys.forEach(t => { if (t.el && t.el.remove) t.el.remove(); });
+  miniTonys = [];
+  document.querySelectorAll('.pepperoni').forEach(p => p.remove());
+}
+function getTonySpeedMult() { return (S.bought['up-better-friend'] ? 0.9 : 1) * (getRU('tonyCaretaker2') ? 0.9 : 1); }
+function ensureTony() {
+  if (!S.bought['up-friend'] && !getRU('permaTony') && !getRU('tonyCaretaker') && !getRU('tonyCaretaker2')) return;
+  if (tonyEl) return;
+  tonyEl = document.createElement('div');
+  tonyEl.className = 'tony-friend';
+  tonyEl.style.backgroundImage = 'url("' + TONY_IMG + '")';
+  tonyEl.textContent = '';
+  tonyEl.title = 'Tony';
+  tonyEl.onclick = () => clickTony(false);
+  document.body.appendChild(tonyEl);
+  tonyTimer = setInterval(moveTony, 33);
+}
+function moveTony() {
+  if (!tonyEl) return;
+  const sp = getTonySpeedMult();
+  tonyX += tonyVX * sp; tonyY += tonyVY * sp;
+  if (tonyX < 0 || tonyX > window.innerWidth - 60) tonyVX *= -1;
+  if (tonyY < 0 || tonyY > window.innerHeight - 60) tonyVY *= -1;
+  tonyX = Math.max(0, Math.min(window.innerWidth - 60, tonyX));
+  tonyY = Math.max(0, Math.min(window.innerHeight - 60, tonyY));
+  tonyEl.style.left = tonyX + 'px'; tonyEl.style.top = tonyY + 'px';
+}
+function getPepperoniChance() { return S.bought['up-best-friend'] ? 1/50 : (S.bought['up-better-friend'] ? 1/90 : 1/100); }
+function clickTony(auto) {
+  ensureTony();
+  if (!tonyEl) return;
+  S.kensingers += getClickPower();
+  if (Math.random() < getPepperoniChance()) spawnPepperoni(false);
+  updateUI(); saveGame();
+}
+function spawnPepperoni(golden) {
+  const p = document.createElement('div');
+  p.className = 'pepperoni' + (golden ? ' golden' : '');
+  p.style.backgroundImage = 'url("' + PEPPERONI_IMG + '")';
+  p.textContent = golden ? '★' : '';
+  p.dataset.golden = golden ? '1' : '0';
+  p.style.left = Math.max(10, Math.min(window.innerWidth - 40, tonyX + 15)) + 'px';
+  p.style.top = Math.max(10, Math.min(window.innerHeight - 40, tonyY + 15)) + 'px';
+  p.onclick = () => collectPepperoni(p);
+  document.body.appendChild(p);
+}
+function collectPepperoni(p) {
+  if (!p || !document.body.contains(p)) return;
+  const golden = p.dataset.golden === '1';
+  p.remove();
+  const mult = golden ? 2 : 1;
+  const roll = Math.floor(Math.random() * 3);
+  if (roll === 0) S.buffs.adkinsEfficiencyUntil = Date.now() + 60000 * mult;
+  else if (roll === 1) S.kensingers += getCPS() * 120 * mult;
+  else S.buffs.clickBoostUntil = Date.now() + 10000 * mult;
+  S.pepperoniClaims = (S.pepperoniClaims || 0) + 1;
+  if (!golden && S.bought['up-best-friend'] && S.pepperoniClaims % 10 === 0) { spawnPepperoni(true); for (let i=0;i<3;i++) spawnSpecial('green'); }
+  updateUI(); saveGame();
+}
+function ensureMiniTonys() {
+  if (!S.bought['up-tony-town'] || miniTonys.length) return;
+  for (let i = 0; i < 6; i++) {
+    const el = document.createElement('div');
+    el.className = 'mini-tony';
+    el.style.backgroundImage = 'url("' + TONY_IMG + '")';
+    document.body.appendChild(el);
+    miniTonys.push({ el, x: 80 + i * 35, y: 90 + i * 20, vx: 3 + Math.random() * 2, vy: 2 + Math.random() * 2 });
+  }
+  miniTonyTimer = setInterval(moveMiniTonys, 50);
+}
+function moveMiniTonys() {
+  miniTonys.forEach(t => {
+    t.x += t.vx; t.y += t.vy;
+    if (t.x < 0 || t.x > window.innerWidth - 24) t.vx *= -1;
+    if (t.y < 0 || t.y > window.innerHeight - 24) t.vy *= -1;
+    t.x = Math.max(0, Math.min(window.innerWidth - 24, t.x));
+    t.y = Math.max(0, Math.min(window.innerHeight - 24, t.y));
+    t.el.style.left = t.x + 'px';
+    t.el.style.top = t.y + 'px';
+    collectMiniTonyTargets(t);
+  });
+}
+function rectsTouch(a, b) { return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom); }
+function collectMiniTonyTargets(t) {
+  const tr = t.el.getBoundingClientRect();
+  document.querySelectorAll('.pepperoni').forEach(p => { if (rectsTouch(tr, p.getBoundingClientRect())) collectPepperoni(p); });
+  document.querySelectorAll('.special-kensinger').forEach(sp => {
+    if (!collected.has(sp) && rectsTouch(tr, sp.getBoundingClientRect())) {
+      collected.add(sp);
+      removeSpecialElement(sp);
+      collectSpecialReward(sp.dataset.type);
+    }
+  });
+}
+function checkAdkinsPepperonis() {
+  if (!getRU('pepperoniMagnet')) return;
+  document.querySelectorAll('.pepperoni').forEach(p => {
+    const pr = p.getBoundingClientRect();
+    for (const d of adkinsData) {
+      const ar = d.img.getBoundingClientRect();
+      if (!(ar.right < pr.left || ar.left > pr.right || ar.bottom < pr.top || ar.top > pr.bottom)) { collectPepperoni(p); break; }
+    }
+  });
+}
+function autoTonyFromRebirth() {
+  if (!tonyEl) return;
+  if (getRU('tonyCaretaker')) clickTony(true);
+  if (getRU('tonyCaretaker2')) { clickTony(true); clickTony(true); clickTony(true); }
+}
+function updateBairFloodUI() {
+  const flood = document.getElementById('bair-flood');
+  const sprite = document.getElementById('bair-barrage-sprite');
+  const meter = document.getElementById('bair-barrage-meter');
+  const fill  = document.getElementById('bair-barrage-fill');
+  const now = Date.now();
+  const active = S.buffs.bairBarrageUntil > now;
+  const clickReq = getBairBarrageClickRequirement();
+  const charged = Math.max(0, (S.manualClickCount || 0) % clickReq);
+  const chargePct = active ? 100 : Math.max(0, Math.min(100, (charged / clickReq) * 100));
+  const duration = getBairBarrageDuration();
+  const peakHeight = getBairBarragePeakHeight();
+  const elapsed = _bairBarrageStartedAt ? Math.max(0, now - _bairBarrageStartedAt) : 0;
+  const remaining = active ? Math.max(0, S.buffs.bairBarrageUntil - now) : 0;
+  const remainingRatio = active ? Math.max(0, Math.min(1, remaining / duration)) : 0;
+  const risingRatio = Math.min(1, elapsed / 700);
+  const visible = active || chargePct > 0 || _bairBarrageWasActive;
+
+  syncBairBarrageMeterPosition();
+
+  if (flood) {
+    flood.style.backgroundImage = 'url("' + BAIR_FLOOD_IMG + '")';
+    const floodHeight = active
+      ? Math.max(0, Math.round(peakHeight * (elapsed < 700 ? easeOutCubic(risingRatio) : remainingRatio)))
+      : 0;
+    flood.style.height = floodHeight + 'px';
+    flood.classList.toggle('active', active);
+    flood.style.opacity = active ? '0.24' : '0';
+  }
+
+  if (sprite) {
+    sprite.src = BAIR_IMG;
+    sprite.style.display = 'block';
+    if (active) {
+      sprite.classList.remove('falling');
+      sprite.classList.add('active');
+      sprite.classList.add('charging');
+      const targetHeight = Math.max(0, Math.round(peakHeight * (elapsed < 700 ? easeOutCubic(risingRatio) : remainingRatio)));
+      sprite.style.height = targetHeight + 'px';
+      sprite.style.opacity = '1';
+    } else if (_bairBarrageHasTriggeredOnce && chargePct > 0) {
+      sprite.classList.remove('falling');
+      sprite.classList.add('charging');
+      sprite.classList.add('active');
+      const chargeHeight = Math.max(8, Math.round(peakHeight * Math.min(0.85, Math.max(0.02, chargePct / 100))));
+      sprite.style.height = chargeHeight + 'px';
+      sprite.style.opacity = '0.88';
+    } else {
+      sprite.classList.remove('active');
+      sprite.classList.remove('charging');
+      if (_bairBarrageWasActive) sprite.classList.add('falling');
+      sprite.style.height = '0px';
+      sprite.style.opacity = '0';
+    }
+  }
+
+  if (!meter || !fill) {
+    _bairBarrageWasActive = active;
+    return;
+  }
+  meter.classList.toggle('show', visible);
+  let percent = chargePct;
+  if (active) {
+    percent = Math.max(0, Math.min(100, remainingRatio * 100));
+    fill.style.background = 'linear-gradient(90deg, #fff176, #ffeb3b)';
+  } else {
+    fill.style.background = 'linear-gradient(90deg, #c62828, #fbc02d, #2e7d32)';
+  }
+  fill.style.width = percent + '%';
+  _bairBarrageWasActive = active;
+  if (!active && !visible && _bairBarrageFrame) {
+    cancelAnimationFrame(_bairBarrageFrame);
+    _bairBarrageFrame = 0;
+  }
+}
+if (typeof window !== 'undefined') window.addEventListener('resize', syncBairBarrageMeterPosition);
+setInterval(autoTonyFromRebirth, 1000);
+setInterval(function(){ if (getRU('tonyAuto') && tonyEl) for (let i=0;i<3;i++) clickTony(true); }, 1000);
+// ═══════════════════════════════════════════════════════════
+//  ADKINS ORBIT
+// ═══════════════════════════════════════════════════════════
+const ADKINS_IMG  = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcDC-scGRpQebcq-APn2-j6GHEOshqG6bUjA&s';
+const ITEM_SIZE   = 18;
+const ITEM_GAP    = 3;
+const ARC_SPACE   = ITEM_SIZE + ITEM_GAP;
+const MIN_RADIUS  = 155; // pushed further out
+const ORBIT_SPEED = 0.5;
+
+let adkinsData   = [];
+let adkinsTimers = [];
+let adkinsEngineTimer = null;
+let orbitAngle   = 0;
+let lastRAF      = null;
+let lastAdkinsCollisionCheck = 0;
+
+function getSpriteCenter() {
+  const r = kensingerSprite.getBoundingClientRect();
+  return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+}
+
+function computeRings(total) {
+  const rings = [];
+  let remaining = total, r = MIN_RADIUS;
+  while (remaining > 0) {
+    const fits   = Math.max(1, Math.floor((2 * Math.PI * r) / ARC_SPACE));
+    const inRing = Math.min(fits, remaining);
+    rings.push({ radius: r, count: inRing });
+    remaining -= inRing;
+    r += (ITEM_SIZE + ITEM_GAP + 2) * (1 + (S.bought['up-adkins-net-1'] ? 0.01 : 0) + (S.bought['up-adkins-net-2'] ? 0.01 : 0));
+  }
+  return rings;
+}
+
+function rafLoop(ts) {
+  if (lastRAF !== null) {
+    const dt = Math.min((ts - lastRAF) / 1000, 0.1);
+    orbitAngle += ORBIT_SPEED * dt;
+  }
+  lastRAF = ts;
+  const { cx, cy } = getSpriteCenter();
+  const half = ITEM_SIZE / 2;
+  adkinsData.forEach(d => {
+    const angle = orbitAngle + (d.indexInRing / d.ringSize) * 2 * Math.PI;
+    d.img.style.left = (cx + d.ringRadius * Math.cos(angle) - half) + 'px';
+    d.img.style.top  = (cy + d.ringRadius * Math.sin(angle) - half) + 'px';
+  });
+  if (adkinsData.length > 0 && ts - lastAdkinsCollisionCheck > 180) {
+    lastAdkinsCollisionCheck = ts;
+    checkAdkinsCollisions();
+    checkAdkinsPepperonis();
+  }
+  requestAnimationFrame(rafLoop);
+}
+requestAnimationFrame(rafLoop);
+
+function doClickAnim(img) {
+  const { cx, cy } = getSpriteCenter();
+  const r    = img.getBoundingClientRect();
+  const ix   = r.left + r.width  / 2;
+  const iy   = r.top  + r.height / 2;
+  const dx   = cx - ix, dy = cy - iy;
+  const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+  const mx   = (dx / dist) * 12, my = (dy / dist) * 12;
+  img.style.transition = 'transform 0.1s ease-in';
+  img.style.transform  = `translate(${mx}px,${my}px) scale(0.75)`;
+  setTimeout(() => {
+    img.style.transition = 'transform 0.12s ease-out';
+    img.style.transform  = 'translate(0,0) scale(1)';
+  }, 110);
+  kensingerSprite.classList.add('active-scale');
+  setTimeout(() => kensingerSprite.classList.remove('active-scale'), 80);
+}
+
+// Adkins click: counts as a real click but NOT towards pirates manual CPS
+function adkinsClick(img) {
+  doClickAnim(img);
+  const cp = getClickPower();
+  S.kensingers += Math.random() < getAdkinsCritChance() ? cp * 25 : cp;
+  if (S.officeOwned > 0) {
+    let chance = S.officeOwned * 0.001 * getBairBarrageMult();
+    if (S.bought['up-apocalypse']) chance *= 0.5;
+    if (Math.random() < chance) spawnSpecial('gold');
+  }
+  updateUI(); saveGame();
+}
+
+function checkAdkinsCollisions() {
+  document.querySelectorAll('.special-kensinger').forEach(sp => {
+    if (collected.has(sp)) return;
+    const sr = sp.getBoundingClientRect();
+    for (const d of adkinsData) {
+      const ar = d.img.getBoundingClientRect();
+      if (!(ar.right < sr.left || ar.left > sr.right || ar.bottom < sr.top || ar.top > sr.bottom)) {
+        collected.add(sp);
+        removeSpecialElement(sp);
+        doClickAnim(d.img);
+        collectSpecialReward(sp.dataset.type);
+        break;
+      }
+    }
+  });
+}
+
+function buildAdkinsRing(count) {
+  adkinsData.forEach(d => d.img.remove());
+  adkinsTimers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  if (adkinsEngineTimer) clearInterval(adkinsEngineTimer);
+  adkinsData = []; adkinsTimers = [];
+  adkinsEngineTimer = null;
+  if (count <= 0) return;
+
+  // Freshman Office: interval halved (faster clicking)
+  const baseInterval = (S.bought['up-freshman'] ? 500 : 1000) / (S.bought['up-adkins-acceleration'] ? 2 : 1) / getAdkinsEfficiencyMult();
+
+  const rings = computeRings(count);
+  let gi = 0;
+  rings.forEach(ring => {
+    for (let i = 0; i < ring.count; i++) {
+      const img     = document.createElement('img');
+      img.src       = ADKINS_IMG;
+      img.className = 'adkins-orbiter';
+      img.style.width  = ITEM_SIZE + 'px';
+      img.style.height = ITEM_SIZE + 'px';
+      document.body.appendChild(img);
+
+      const entry = { img, ringRadius: ring.radius, indexInRing: i, ringSize: ring.count };
+      adkinsData.push(entry);
+
+      const ft = setTimeout(() => { img.style.opacity = '1'; }, gi * 15);
+      adkinsTimers.push(ft);
+
+      gi++;
+    }
+  });
+  adkinsEngineTimer = setInterval(adkinsBatchClick, baseInterval);
+}
+
+function adkinsBatchClick() {
+  const count = S.assistantOwned || 0;
+  if (count <= 0) return;
+  const cp = getClickPower();
+  const crits = getAdkinsCritChance() > 0 ? Array.from({ length: count }).reduce(n => n + (Math.random() < getAdkinsCritChance() ? 1 : 0), 0) : 0;
+  S.kensingers += (count - crits) * cp + crits * cp * 25;
+  if (S.officeOwned > 0) {
+    let chance = 1 - Math.pow(1 - (S.officeOwned * 0.001 * getBairBarrageMult() * (S.bought['up-apocalypse'] ? 0.5 : 1)), count);
+    if (Math.random() < chance) spawnSpecial('gold');
+  }
+  if (adkinsData.length) doClickAnim(adkinsData[Math.floor(Math.random() * adkinsData.length)].img);
+  updateUI(); saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TODD SWORD FARM
+// ═══════════════════════════════════════════════════════════
+const CROP_TYPES = {
+  packetPatch:     { name: 'Biology Packet Patch', icon: '🥬', buttonId: 'crop-packet', costSeconds: 60,  growMs: 180000, rewardSeconds: 360, label: 'Harvests 360s of CPS', base: true },
+  labCorn:         { name: 'Lab Corn',              icon: '🌽', buttonId: 'crop-lab',    costSeconds: 120, growMs: 300000, rewardSeconds: 900, label: 'Harvests 900s of CPS', base: true },
+  kensingerCarrot: { name: 'Kensinger Carrot',      icon: '🥕', buttonId: 'crop-carrot', costSeconds: 180, growMs: 360000, rewardSeconds: 0, label: 'Blocks special spawns, then supercharges them' },
+  swordBloom:      { name: 'Sword Bloom',           icon: '⚔️', buttonId: 'crop-sword',  costSeconds: 0,   growMs: 180000, boostAmount: 10, boostMs: 60000, penaltyMs: 90000, label: 'Stops CPS, then gives 10x CPS' }
+};
+const FARM_RECIPES = [
+  { result: 'kensingerCarrot', chance: 0.50, a: 'labCorn', b: 'packetPatch', text: 'Lab Corn + Biology Patch within 1 square: 50% Kensinger Carrot.' },
+  { result: 'swordBloom', chance: 0.25, a: 'labCorn', b: 'kensingerCarrot', text: 'Lab Corn + Kensinger Carrot within 1 square: 25% Sword Bloom.' }
+];
+farmDefinitionsReady = true;
+
+function isFarmUnlocked() { return !!S.bought['up-todd-farm']; }
+function isCrossBreedingUnlocked() { return !!S.bought['up-cross-breeding']; }
+function getCropGrowMs(crop) {
+  if (getRU('oneMinuteCrops')) return 60000;
+  const speedMult = getRU('farmingSpeed') ? 0.75 : 1;
+  return Math.max(10000, (crop.growMs - (S.bought['up-crop-speed'] ? 10000 : 0)) * speedMult);
+}
+function getCropGrowTicks(crop) { return Math.max(10, Math.ceil(getCropGrowMs(crop) / 1000)); }
+function normalizeCropProgress(plot) {
+  if (!plot) return null;
+  if (!farmDefinitionsReady) return plot;
+  const crop = CROP_TYPES[plot.type];
+  if (!crop) return plot;
+  const required = getCropGrowTicks(crop);
+  if (typeof plot.growTicksRequired !== 'number' || plot.growTicksRequired <= 0) plot.growTicksRequired = required;
+  if (typeof plot.growTicksDone !== 'number') {
+    if (typeof plot.remainingMs === 'number') {
+      plot.growTicksDone = Math.max(0, plot.growTicksRequired - Math.ceil(plot.remainingMs / 1000));
+    } else if (typeof plot.readyAt === 'number') {
+      plot.growTicksDone = Math.max(0, plot.growTicksRequired - Math.ceil(Math.max(0, plot.readyAt - Date.now()) / 1000));
+    } else {
+      plot.growTicksDone = 0;
+    }
+  }
+  plot.growTicksDone = Math.max(0, Math.min(plot.growTicksDone, plot.growTicksRequired));
+  delete plot.readyAt;
+  delete plot.remainingMs;
+  return plot;
+}
+function isCropReady(plot) {
+  normalizeCropProgress(plot);
+  return !!plot && plot.growTicksDone >= plot.growTicksRequired;
+}
+function getCropRemainingTicks(plot) {
+  normalizeCropProgress(plot);
+  return plot ? Math.max(0, plot.growTicksRequired - plot.growTicksDone) : 0;
+}
+function formatFarmTicks(ticks) { return formatTime(Math.max(0, ticks) * 1000); }
+function advanceFarmGrowth(ticks) {
+  if (!isFarmUnlocked()) return;
+  normalizeFarmPlots();
+  let changed = false;
+  S.farmPlots.forEach(plot => {
+    if (!plot) return;
+    normalizeCropProgress(plot);
+    if (plot.growTicksDone < plot.growTicksRequired) {
+      plot.growTicksDone = Math.min(plot.growTicksRequired, plot.growTicksDone + ticks);
+      changed = true;
+    }
+  });
+  return changed;
+}
+function advanceFarmGrowthByElapsed() {
+  if (!farmDefinitionsReady || !isFarmUnlocked()) return false;
+  normalizeFarmPlots();
+  const hasCrop = S.farmPlots.some(plot => !!plot && !isCropReady(plot));
+  const now = Date.now();
+  if (!hasCrop) { S.lastFarmGrowthAt = now; return false; }
+  if (!S.lastFarmGrowthAt) S.lastFarmGrowthAt = now;
+  const ticks = Math.floor((now - S.lastFarmGrowthAt) / 1000);
+  if (ticks <= 0) return false;
+  S.lastFarmGrowthAt += ticks * 1000;
+  S.farmClockClicks = (S.farmClockClicks || 0) + ticks;
+  return advanceFarmGrowth(ticks);
+}
+function getFarmBasisCPS() {
+  syncBuffs();
+  const cb = getClassBase();
+  return ((S.autoOwned * getAutoBase()) + (S.classOwned * cb * getAutoSynergyMult()) + (S.biologyOwned * 2500 * getAutoSynergyMult())) * getEffectiveMult() * getPiratesMult();
+}
+function formatTime(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+function normalizeFarmPlots() {
+  if (!Array.isArray(S.farmPlots) || S.farmPlots.length !== 9) S.farmPlots = Array(9).fill(null);
+  S.farmPlots.forEach(plot => normalizeCropProgress(plot));
+}
+function getAdjacentIndexes(index) {
+  const row = Math.floor(index / 3), col = index % 3, out = [];
+  for (let r = row - 1; r <= row + 1; r++) {
+    for (let c = col - 1; c <= col + 1; c++) {
+      if (r === row && c === col) continue;
+      if (r >= 0 && r < 3 && c >= 0 && c < 3) out.push(r * 3 + c);
+    }
+  }
+  return out;
+}
+function hasActiveCrop(typeId) {
+  normalizeFarmPlots();
+  return S.farmPlots.some(plot => plot && plot.type === typeId);
+}
+function canUseCrop(typeId) {
+  if (CROP_TYPES[typeId].base) return true;
+  return !!S.unlockedCrops[typeId];
+}
+function setFarmTab(tab) {
+  S.farmTab = tab === 'recipes' ? 'recipes' : 'plots';
+  updateFarmUI();
+  saveGame();
+}
+function toggleFarmPanel() {
+  if (!isFarmUnlocked()) return;
+  S.farmOpen = !S.farmOpen;
+  updateFarmUI();
+  saveGame();
+}
+function startCropDrag(event, typeId) {
+  if (!canUseCrop(typeId)) { event.preventDefault(); return; }
+  S.selectedCrop = typeId;
+  event.dataTransfer.setData('text/plain', typeId);
+  event.dataTransfer.effectAllowed = 'copy';
+  updateDevModeUI();
+  renderRebirthUI();
+  updateBairFloodUI();
+}
+function selectCrop(typeId) {
+  if (!canUseCrop(typeId)) { showFarmNotice('Unlock that crop through recipes first.'); return; }
+  S.selectedCrop = typeId;
+  updateFarmUI();
+  saveGame();
+}
+function showFarmNotice(text) {
+  const el = document.getElementById('farm-notice');
+  if (!el) return;
+  el.textContent = text;
+  setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 3500);
+}
+function plantCropAt(index) {
+  if (!isFarmUnlocked()) return;
+  normalizeFarmPlots();
+  const typeId = S.selectedCrop || 'packetPatch';
+  const crop = CROP_TYPES[typeId];
+  if (!crop || S.farmPlots[index]) return;
+  if (!canUseCrop(typeId)) { showFarmNotice('Unlock that crop through recipes first.'); return; }
+  if (hasActiveCrop(typeId)) { showFarmNotice('Harvest your current ' + crop.name + ' first.'); return; }
+  const now = Date.now();
+  const basis = getFarmBasisCPS();
+  if (basis <= 0) { showFarmNotice('Build some CPS before planting.'); return; }
+  if (typeId === 'swordBloom' && (S.buffs.cpsPenaltyUntil > now || S.buffs.cpsBoostUntil > now)) {
+    showFarmNotice('Finish the current Sword Bloom effect first.'); return;
+  }
+  const planted = { id: now + '-' + Math.random().toString(16).slice(2), type: typeId, plantedAt: now, growTicksRequired: getCropGrowTicks(crop), growTicksDone: 0, plot: index, freeSpawn: false };
+  if (crop.rewardSeconds) {
+    planted.cost = Math.floor(basis * crop.costSeconds);
+    planted.reward = Math.floor(basis * crop.rewardSeconds);
+    if (S.kensingers < planted.cost) { showFarmNotice('Not enough Kensingers for that crop.'); return; }
+    S.kensingers -= planted.cost;
+  } else if (typeId === 'kensingerCarrot') {
+    planted.cost = Math.floor(basis * crop.costSeconds);
+    if (S.kensingers < planted.cost) { showFarmNotice('Not enough Kensingers for that crop.'); return; }
+    S.kensingers -= planted.cost;
+    S.buffs.specialBlockUntil = Math.max(S.buffs.specialBlockUntil || 0, now + 120000);
+  } else if (typeId === 'swordBloom') {
+    S.buffs.cpsPenaltyUntil = now + crop.penaltyMs;
+    scheduleBuffTimers();
+  }
+  S.farmPlots[index] = planted;
+  if (!planted.freeSpawn && getRU('cropMitosis') && Math.random() < 0.5) spawnFreeCropClone(typeId, index);
+  S.lastFarmGrowthAt = Date.now();
+  showFarmNotice(crop.name + ' planted.');
+  updateUI(); saveGame();
+}
+function spawnFreeCropClone(typeId, nearIndex) {
+  const empty = getAdjacentIndexes(nearIndex).filter(i => !S.farmPlots[i]);
+  if (!empty.length) return false;
+  const crop = CROP_TYPES[typeId];
+  const now = Date.now();
+  const index = empty[Math.floor(Math.random() * empty.length)];
+  S.farmPlots[index] = { id: now + '-' + Math.random().toString(16).slice(2), type: typeId, plantedAt: now, growTicksRequired: getCropGrowTicks(crop), growTicksDone: 0, plot: index, freeSpawn: true, bred: true };
+  showFarmNotice('Crop Mitosis planted a free ' + crop.name + '.');
+  return true;
+}
+function spawnBredCrop(typeId, nearIndex) {
+  normalizeFarmPlots();
+  const empty = getAdjacentIndexes(nearIndex).filter(i => !S.farmPlots[i]);
+  if (!empty.length || hasActiveCrop(typeId)) return false;
+  const index = empty[Math.floor(Math.random() * empty.length)];
+  const crop = CROP_TYPES[typeId];
+  const now = Date.now();
+  S.farmPlots[index] = { id: now + '-' + Math.random().toString(16).slice(2), type: typeId, plantedAt: now, growTicksRequired: getCropGrowTicks(crop), growTicksDone: 0, plot: index, freeSpawn: true, bred: true };
+  S.unlockedCrops[typeId] = true;
+  showFarmNotice(crop.name + ' cross-bred in a nearby plot.');
+  return true;
+}
+function tryBreedFrom(index) {
+  if (!isCrossBreedingUnlocked()) return;
+  const source = S.farmPlots[index];
+  if (!source) return;
+  FARM_RECIPES.forEach(recipe => {
+    const pairMatchesSource = source.type === recipe.a || source.type === recipe.b;
+    if (!pairMatchesSource || hasActiveCrop(recipe.result)) return;
+    const needed = source.type === recipe.a ? recipe.b : recipe.a;
+    const hasNeighbor = getAdjacentIndexes(index).some(i => S.farmPlots[i] && S.farmPlots[i].type === needed);
+    if (hasNeighbor && Math.random() < recipe.chance) spawnBredCrop(recipe.result, index);
+  });
+}
+function harvestCropAt(index) {
+  normalizeFarmPlots();
+  const planted = S.farmPlots[index];
+  if (!planted) { plantCropAt(index); return; }
+  normalizeCropProgress(planted);
+  const _ready = isCropReady(planted);
+  if (!_ready) { showFarmNotice(CROP_TYPES[planted.type].name + ' needs ' + formatFarmTicks(getCropRemainingTicks(planted)) + '.'); return; }
+  S.unlockedCrops[planted.type] = true;
+  const crop = CROP_TYPES[planted.type];
+  if (planted.reward) {
+    S.kensingers += planted.reward;
+    showFarmNotice(crop.name + ' harvested: +' + planted.reward.toLocaleString());
+  } else if (planted.type === 'kensingerCarrot') {
+    if (!planted.freeSpawn) S.buffs.specialBoostUntil = Date.now() + 60000;
+    showFarmNotice(crop.name + (planted.freeSpawn ? ' discovered.' : ' harvested: special spawns boosted!'));
+  } else if (planted.type === 'swordBloom') {
+    if (!planted.freeSpawn) {
+      S.buffs.cpsBoostAmount = planted.boostAmount || crop.boostAmount;
+      S.buffs.cpsBoostUntil = Date.now() + (planted.boostMs || crop.boostMs);
+      scheduleBuffTimers();
+      showFarmNotice(crop.name + ' harvested: ' + S.buffs.cpsBoostAmount + 'x CPS!');
+    } else {
+      showFarmNotice(crop.name + ' discovered.');
+    }
+  }
+  tryBreedFrom(index);
+  S.farmPlots[index] = null;
+  updateUI(); saveGame();
+}
+function updateFarmUI() {
+  const panel = document.getElementById('farm-panel');
+  if (!panel) return;
+  normalizeFarmPlots();
+  advanceFarmGrowthByElapsed();
+  const unlocked = isFarmUnlocked();
+  panel.classList.toggle('unlocked', unlocked);
+  panel.classList.toggle('collapsed', !S.farmOpen);
+  if (!unlocked) return;
+  const basis = getFarmBasisCPS();
+  const now = Date.now();
+  const penalty = S.buffs.cpsPenaltyUntil > now;
+  const boost = S.buffs.cpsBoostUntil > now;
+  const specialBlock = S.buffs.specialBlockUntil > now;
+  const specialBoost = S.buffs.specialBoostUntil > now;
+  document.getElementById('farm-tab-plots').classList.toggle('active', S.farmTab !== 'recipes');
+  document.getElementById('farm-tab-recipes').classList.toggle('active', S.farmTab === 'recipes');
+  document.getElementById('farm-plots-view').classList.toggle('active', S.farmTab !== 'recipes');
+  document.getElementById('farm-recipes-view').classList.toggle('active', S.farmTab === 'recipes');
+  const statusBits = ['Farm CPS basis: ' + basis.toFixed(2), 'Farm clock: ' + (S.farmClockClicks || 0).toLocaleString() + ' ticks'];
+  if (penalty) statusBits.push('CPS sacrificed ' + formatTime(S.buffs.cpsPenaltyUntil - now));
+  if (boost) statusBits.push(S.buffs.cpsBoostAmount + 'x CPS ' + formatTime(S.buffs.cpsBoostUntil - now));
+  if (specialBlock) statusBits.push('special spawns blocked ' + formatTime(S.buffs.specialBlockUntil - now));
+  if (specialBoost) statusBits.push('special spawns boosted ' + formatTime(S.buffs.specialBoostUntil - now));
+  document.getElementById('farm-status').textContent = statusBits.join(' · ');
+
+  Object.keys(CROP_TYPES).forEach(typeId => {
+    const crop = CROP_TYPES[typeId];
+    const btn = document.getElementById(crop.buttonId);
+    if (!btn) return;
+    const usable = canUseCrop(typeId);
+    btn.classList.toggle('hidden-crop', !crop.base && !S.unlockedCrops[typeId]);
+    let disabled = !usable || hasActiveCrop(typeId) || basis <= 0;
+    if (typeId === 'swordBloom' && (penalty || boost)) disabled = true;
+    if (crop.rewardSeconds || typeId === 'kensingerCarrot') disabled = disabled || S.kensingers < Math.floor(basis * crop.costSeconds);
+    btn.disabled = disabled;
+    btn.classList.toggle('active', S.selectedCrop === typeId);
+  });
+  document.getElementById('crop-packet-sub').textContent = 'Cost: ' + Math.floor(basis * 60).toLocaleString() + ' · Harvest: ' + Math.floor(basis * 360).toLocaleString();
+  document.getElementById('crop-lab-sub').textContent = 'Cost: ' + Math.floor(basis * 120).toLocaleString() + ' · Harvest: ' + Math.floor(basis * 900).toLocaleString();
+  document.getElementById('crop-carrot-sub').textContent = canUseCrop('kensingerCarrot') ? 'Cost: ' + Math.floor(basis * 180).toLocaleString() + ' · 6:00 grow' : 'Recipe locked';
+  document.getElementById('crop-sword-sub').textContent = canUseCrop('swordBloom') ? (penalty || boost ? 'Finish current effect' : '90s no CPS · 10x CPS') : 'Recipe locked';
+
+  const grid = document.getElementById('farm-grid');
+  grid.innerHTML = '';
+  let readyCount = 0;
+  S.farmPlots.forEach((plot, index) => {
+    const cell = document.createElement('button');
+    cell.className = 'farm-plot' + (plot ? '' : ' empty');
+    cell.onclick = () => harvestCropAt(index);
+    cell.ondragover = event => { event.preventDefault(); cell.classList.add('drop-target'); };
+    cell.ondragleave = () => cell.classList.remove('drop-target');
+    cell.ondrop = event => { event.preventDefault(); cell.classList.remove('drop-target'); const cropType = event.dataTransfer.getData('text/plain'); if (cropType) { S.selectedCrop = cropType; plantCropAt(index); } };
+    if (plot) {
+      const crop = CROP_TYPES[plot.type];
+      normalizeCropProgress(plot);
+      const ready = isCropReady(plot);
+      if (ready) readyCount++;
+      if (ready && !plot.notified) { plot.notified = true; showFarmNotice(crop.name + ' is ready!'); }
+      cell.classList.toggle('ready', ready);
+      cell.classList.toggle('bred', !!plot.bred);
+      cell.dataset.ticks = getCropRemainingTicks(plot);
+      cell.innerHTML = '<span class="plot-icon">' + crop.icon + '</span><span class="plot-time">' + (ready ? 'Ready!' : formatFarmTicks(getCropRemainingTicks(plot))) + '</span>';
+      cell.title = crop.name + (ready ? ' ready to harvest' : ' growing');
+    } else {
+      cell.title = 'Plant selected crop';
+    }
+    grid.appendChild(cell);
+  });
+  const badge = document.getElementById('farm-ready-badge');
+  badge.textContent = readyCount;
+  badge.classList.toggle('show', readyCount > 0);
+  syncStockPanelPosition();
+
+  const recipes = document.getElementById('recipe-list');
+  recipes.innerHTML = '';
+  FARM_RECIPES.forEach(recipe => {
+    const result = CROP_TYPES[recipe.result];
+    const known = !!S.unlockedCrops[recipe.result];
+    const card = document.createElement('div');
+    card.className = 'recipe-card' + (known ? '' : ' locked');
+    card.innerHTML = known ? ('<strong>' + result.icon + ' ' + result.name + '</strong><br>' + recipe.text) : '<strong>???</strong><br>Discover this crop through cross breeding.';
+    recipes.appendChild(card);
+  });
+}
+// ═══════════════════════════════════════════════════════════
+//  RANDOM SPAWNS
+// ═══════════════════════════════════════════════════════════
+function getSpecialSpawnDelay(type) {
+  syncBuffs();
+  const boosted = S.buffs.specialBoostUntil > Date.now();
+  const rate = (boosted ? (type === 'gold' ? 5 : 7) : 1) * getBairBarrageMult();
+  const base = type === 'gold' ? (Math.random() * 60000 + 60000) : (Math.random() * 120000 + 120000);
+  return base / rate;
+}
+function queueGoldSpawn() {
+  setTimeout(() => {
+    const now = Date.now();
+    if (!_tabHidden && now - _lastGoldSpawn > 30000) { _lastGoldSpawn = now; spawnSpecial('gold'); }
+    queueGoldSpawn();
+  }, getSpecialSpawnDelay('gold'));
+}
+function queueGreenSpawn() {
+  setTimeout(() => {
+    const now = Date.now();
+    if (!_tabHidden && now - _lastGreenSpawn > 60000 && S.bought['up-gamma']) { _lastGreenSpawn = now; spawnSpecial('green'); }
+    queueGreenSpawn();
+  }, getSpecialSpawnDelay('green'));
+}
+queueGoldSpawn();
+queueGreenSpawn();
+
+// ═══════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════
+function setTab(name, btnEl) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(name + '-tab').classList.add('active');
+  const activeBtn = btnEl || Array.from(document.querySelectorAll('.tab-btn')).find(b => (b.getAttribute('onclick') || '').includes("'" + name + "'"));
+  if (activeBtn) activeBtn.classList.add('active');
+  if (name === 'rebirth') renderRebirthUI();
+}
+
+function setTheme(theme) {
+  S.settings = Object.assign({ theme: 'light', roundedDisplay: false, priceAbbreviations: true, lastVersion: '' }, S.settings || {});
+  delete S.settings.sfx;
+  if (S.settings.compactNumbers !== undefined && S.settings.priceAbbreviations === undefined) S.settings.priceAbbreviations = S.settings.compactNumbers;
+  S.settings.theme = theme === 'dark' ? 'dark' : 'light';
+  applyTheme();
+  saveGame();
+}
+
+function applyTheme() {
+  const theme = (S.settings && S.settings.theme === 'dark') ? 'dark' : 'light';
+  document.body.classList.toggle('theme-dark', theme === 'dark');
+  const lightBtn = document.getElementById('theme-light');
+  const darkBtn = document.getElementById('theme-dark');
+  if (lightBtn) lightBtn.classList.toggle('active', theme === 'light');
+  if (darkBtn) darkBtn.classList.toggle('active', theme === 'dark');
+  updateDisplaySettingsUI();
+}
+
+function updateDisplaySettingsUI() {
+  const rounded = !!S.settings.roundedDisplay;
+  const compact = S.settings.priceAbbreviations !== false;
+  const roundedBtn = document.getElementById('toggle-rounded');
+  const compactBtn = document.getElementById('toggle-compact');
+  if (roundedBtn) roundedBtn.classList.toggle('active', rounded);
+  if (compactBtn) compactBtn.classList.toggle('active', compact);
+  const roundedState = document.getElementById('rounded-state');
+  const compactState = document.getElementById('compact-state');
+  if (roundedState) roundedState.textContent = rounded ? 'On' : 'Off';
+  if (compactState) compactState.textContent = compact ? 'On' : 'Off';
+}
+function toggleRoundedDisplay() {
+  S.settings.roundedDisplay = !S.settings.roundedDisplay;
+  updateDisplaySettingsUI();
+  updateUI();
+  saveGame();
+}
+function toggleCompactNumbers() {
+  S.settings.priceAbbreviations = !S.settings.priceAbbreviations;
+  updateDisplaySettingsUI();
+  updateUI();
+  saveGame();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI UPDATE
+// ═══════════════════════════════════════════════════════════
+function updateUI() {
+  syncBuffs();
+  updateScoreUI();
+  updateShopUI();
+  renderStocks();
+  updateUpgradesUI();
+  updateDevModeUI();
+  renderRebirthUI();
+  updateBairFloodUI();
+}
+
+function updateScoreUI() {
+  document.getElementById('count').textContent = formatBigNumber(S.kensingers, true);
+  const notice = document.getElementById('multiplier-notice');
+  const permNotice = document.getElementById('perm-multiplier-notice');
+  const tm = getTemporaryMult();
+  const pm = getTotalPermanentMult();
+  if (tm > 1) {
+    notice.style.display = 'block';
+    notice.textContent   = formatStat(tm) + 'X TEMPORARY MULTIPLIER ACTIVE!';
+    notice.style.color   = greenMult > 1 ? '#00ff00' : 'gold';
+  } else {
+    notice.style.display = 'none';
+  }
+  if (pm > 1) {
+    permNotice.style.display = 'block';
+    permNotice.textContent = formatStat(pm) + 'X PERMANENT MULTIPLIER ACTIVE!';
+    permNotice.style.color = '#7c4dff';
+  } else {
+    permNotice.style.display = 'none';
+  }
+}
+
+function updateShopUI() {
+  const k    = S.kensingers;
+  const cps  = getCPS();
+  const cp   = getClickPower();
+  const eff  = getSingleAutoContrib();
+  const cls  = getSingleClassContrib();
+  const bio  = getSingleBiologyContrib();
+  const capAssistant = getAssistantCap();
+
+  document.getElementById('per-sec').textContent             = formatShopStat(cps);
+  document.getElementById('c-pow').textContent               = formatShopStat(cp);
+  const barrageStatus = document.getElementById('bair-barrage-status');
+  if (barrageStatus) {
+    const active = S.buffs.bairBarrageUntil > Date.now();
+    const req = getBairBarrageClickRequirement();
+    const left = active ? 0 : (req - ((S.manualClickCount || 0) % req));
+    const mult = active ? (S.bought['up-bair-barrage'] ? 5 : 2) : 1;
+    barrageStatus.textContent = active ? 'Bair Barrage active: CPS and Click Power are boosted ' + mult + 'x.' : 'Bair Barrage: ' + left.toLocaleString() + ' manual clicks left for ' + (S.bought['up-bair-barrage'] ? '5x' : '2x') + ' gains.';
+    barrageStatus.style.display = 'block';
+  }
+  document.getElementById('label-eff').textContent           = formatStat(eff);
+  document.getElementById('label-click-power').textContent   = formatStat(getSingleClickContrib());
+  document.getElementById('class-power-label').textContent   = formatStat(cls);
+  document.getElementById('biology-power-label').textContent = formatStat(bio);
+
+  document.getElementById('count-auto').textContent          = S.autoOwned;
+  document.getElementById('count-click').textContent         = S.clickOwned;
+  document.getElementById('count-class').textContent         = S.classOwned;
+  document.getElementById('count-biology').textContent       = S.biologyOwned;
+  document.getElementById('count-office').textContent        = S.officeOwned;
+  document.getElementById('count-assistant').textContent       = S.assistantOwned;
+  const maxAssistant = document.getElementById('max-assistant'); if (maxAssistant) maxAssistant.textContent = capAssistant;
+  const countBairPower = document.getElementById('count-bairPower'); if (countBairPower) countBairPower.textContent = S.bairPowerOwned;
+  const countBairBank = document.getElementById('count-bairBank'); if (countBairBank) countBairBank.textContent = S.bairBankOwned;
+  const bairPowerSub = document.querySelector('#btn-bairPower .btn-sub');
+  if (bairPowerSub) bairPowerSub.innerHTML = '+<span id="bair-power-live">' + formatShopStat(getBairPowerDisplayBonus()) + '</span> Click Power &nbsp; Owned: <span id="count-bairPower">' + S.bairPowerOwned + '</span>';
+  const bairBankSub = document.querySelector('#btn-bairBank .btn-sub');
+  if (bairBankSub) bairBankSub.innerHTML = '+<span id="bair-bank-live-cps">' + formatShopStat(getBairBankDisplayCpsBonus()) + '</span>/s and +<span id="bair-bank-live-click">' + formatShopStat(getBairBankDisplayClickBonus()) + '</span> click &nbsp; Owned: <span id="count-bairBank">' + S.bairBankOwned + '</span>';
+
+  updateShopBtn('auto',      10,      S.autoOwned,      k, null);
+  updateShopBtn('click',     100,     S.clickOwned,     k, null);
+  updateShopBtn('class',     1000,    S.classOwned,     k, null);
+  const biologyBtn = document.getElementById('btn-biology');
+  biologyBtn.style.display = S.bought['up-todd-class'] ? 'flex' : 'none';
+  setShopOrder('auto', 10);
+  setShopOrder('click', 100);
+  setShopOrder('class', 1000);
+  setShopOrder('office', 15000);
+  setShopOrder('assistant', 100000);
+  setShopOrder('biology', 1000000);
+  setShopOrder('bairPower', 1000000000);
+  setShopOrder('bairBank', 250000000000);
+  if (S.bought['up-todd-class']) updateShopBtn('biology', 1000000, S.biologyOwned, k, null);
+  updateShopBtn('office',    15000,   S.officeOwned,    k, 10);
+  updateShopBtn('assistant', 100000,  S.assistantOwned, k, capAssistant);
+  updateShopBtn('bairPower', 1000000000, S.bairPowerOwned, k, null);
+  updateShopBtn('bairBank', 250000000000, S.bairBankOwned, k, null);
+}
+function setShopOrder(type, base) {
+  const btn = document.getElementById('btn-' + type);
+  if (btn) btn.style.order = base;
+}
+
+function updateShopBtn(type, base, owned, k, cap) {
+  const btn = document.getElementById('btn-' + type);
+  btn.classList.remove('maxed');
+  setShopOrder(type, base);
+  if (cap && owned >= cap) {
+    btn.disabled = true;
+    btn.classList.add('maxed');
+    btn.style.order = 999999999;
+    document.getElementById('price-' + type).textContent = 'MAXED';
+    return;
+  }
+  base = getEffectiveBasePrice(type, base);
+  let preview = buyMode === 'all' ? getMaxAffordable(base, owned, k) : buyMode;
+  if (cap) preview = Math.min(preview, cap - owned);
+  const displayAmount = Math.max(1, preview);
+  const cost = getBulkCost(base, owned, displayAmount);
+  const requiredCost = buyMode === 'all' ? getBulkCost(base, owned, 1) : cost;
+  document.getElementById('price-' + type).textContent = formatPrice(cost);
+  btn.disabled = (k < requiredCost || preview <= 0);
+}
+
+function updateUpgradesUI() {
+  const k = S.kensingers;
+  UPGRADES.forEach(up => {
+    const btn = document.getElementById(up.id);
+    if (!btn) return;
+    if (S.bought[up.id]) { btn.style.display = 'none'; return; }
+    if (k >= up.showAt || S.seen[up.id]) {
+      btn.style.display = 'flex';
+      S.seen[up.id]     = true;
+      const effCost = getOneTimeUpgradeCost(up.cost, up.id);
+      btn.disabled      = (k < effCost);
+      const info = UPGRADE_INFO[up.id];
+      if (info) btn.onmouseover = function(){ showTip(btn, info[0], info[1](), effCost); };
+      k >= effCost ? btn.classList.add('pulsing') : btn.classList.remove('pulsing');
+    } else {
+      btn.style.display = 'none';
+      btn.classList.remove('pulsing');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+buildAdkinsRing(S.assistantOwned);
+restoreFlyingSpecials();
+ensureTony();
+ensureMiniTonys();
+applyUpgradeArt();
+applyTheme();
+updateDisplaySettingsUI();
+updateDevModeUI();
+updateUI();
+setInterval(updateUI, 100);
+window.addEventListener('DOMContentLoaded', function() { showUpdateLog(true); syncStockPanelPosition(); });
+window.addEventListener('resize', syncStockPanelPosition);
+checkSaveHint();
+setInterval(function(){
+  advanceFarmGrowthByElapsed();
+  updateFarmUI();
+  saveGame();
+},1000);
+
+// ── Update Log ──────────────────────────────────────────────
+function checkUpdateLog() {
+  if (!S.settings) S.settings = {};
+  if (S.settings.lastVersion !== _CUR_VERSION) {
+    showUpdateLog(false);
+  }
+}
+function showUpdateLog(manual) {
+  const card = document.getElementById('update-card');
+  const stack = document.getElementById('notice-stack');
+  if (card) card.classList.add('open');
+  if (stack) {
+    stack.classList.add('update-open');
+    stack.style.display = 'flex';
+  }
+}
+function dismissUpdate() {
+  S.settings.lastVersion = _CUR_VERSION;
+  const card = document.getElementById('update-card');
+  const stack = document.getElementById('notice-stack');
+  if (card) card.classList.remove('open');
+  if (stack) stack.classList.remove('update-open');
+  saveGame();
+}
+// ── Save hint (first load only) ─────────────────────────────
+function checkSaveHint() {
+  try {
+    if (!localStorage.getItem('kc_hint_seen')) {
+      const h = document.getElementById('save-card');
+      if (h) h.classList.add('open');
+    }
+  } catch(e) {}
+}
+function dismissSaveHint() {
+  const h = document.getElementById('save-card');
+  if (h) h.classList.remove('open');
+  try { localStorage.setItem('kc_hint_seen', '1'); } catch(e) {}
+}
+</script>
+<div id="notice-stack">
+  <div id="save-card" class="notice-card">
+    <div class="notice-head">
+      <h3>💾 Saving</h3>
+      <button class="notice-x" onclick="dismissSaveHint()">×</button>
+    </div>
+    <p>Saving is in Settings. Your game auto-saves in this browser. Export and import saves are in the Settings tab.</p>
+  </div>
+  <div id="update-card" class="notice-card">
+    <div class="notice-head">
+      <h3>🆕 What's New</h3>
+      <button class="notice-x" onclick="dismissUpdate()">×</button>
+    </div>
+    <p class="ver-tag">Version 2.0.0 — May 2026</p>
+    <ul>
+      <li>Saving is in Settings.</li>
+      <li>Permanent multipliers now have their own live readout.</li>
+      <li>Farm timers now grow correctly.</li>
+      <li>Added Kevin Bair buyables and Bair Banking.</li>
+      <li>Added Rebirths and permanent upgrades.</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
+<!-- Bair Flood fix: preserve original HTML length and behavior -->
+   
+
+
