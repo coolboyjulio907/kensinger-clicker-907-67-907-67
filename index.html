@@ -437,7 +437,8 @@ body.theme-dark .notice-x { background:#343a45; color:#f2f4f8; }
 #rebirth-button:disabled { opacity: 0.35; cursor: not-allowed; }
 #rebirth-note { font-size: 12px; line-height: 1.45; color: #666; }
 #rebirth-tree { position: relative; width: 820px; height: 650px; min-width: 820px; margin: 0 auto; overflow: visible; z-index: 3; }
-.rebirth-node { position: absolute; width: 82px; height: 82px; border-radius: 50%; border: 2px solid #8f95ff; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.96), rgba(210,216,255,0.92)); color: #171725; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 9px; line-height: 1.05; font-weight: bold; text-align: center; cursor: pointer; padding: 5px; box-shadow: 0 0 18px rgba(130,150,255,0.36); z-index: 4; pointer-events: auto; }
+#rebirth-tree { width: 1100px; height: 860px; min-width: 1100px; }
+.rebirth-node { position: absolute; width: 74px; height: 74px; border-radius: 50%; border: 2px solid #8f95ff; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.96), rgba(210,216,255,0.92)); color: #171725; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 8px; line-height: 1.05; font-weight: bold; text-align: center; cursor: pointer; padding: 5px; box-shadow: 0 0 18px rgba(130,150,255,0.36); z-index: 4; pointer-events: auto; }
 .rebirth-node .node-icon { font-size: 20px; line-height: 1; }
 .rebirth-node:hover:not(.locked) { transform: scale(1.04); }
 .rebirth-node.locked { opacity: 0.42; filter: grayscale(1); cursor: not-allowed; }
@@ -455,13 +456,18 @@ body.theme-dark .notice-x { background:#343a45; color:#f2f4f8; }
 #rebirth-menu-head h3 { margin:0; font-size:18px; }
 #rebirth-menu-head p { margin:4px 0 0; font-size:12px; color:#cfd3ff; }
 #rebirth-points-readout { font-size:13px; font-weight:bold; color:#fff; padding:8px 10px; border:1px solid rgba(255,255,255,0.22); border-radius:8px; background:rgba(255,255,255,0.08); }
-#rebirth-close { border:none; border-radius:8px; background:#fff; color:#171725; font-weight:bold; padding:9px 12px; cursor:pointer; }
+#rebirth-buy-all, #rebirth-close { border:none; border-radius:8px; background:#fff; color:#171725; font-weight:bold; padding:9px 12px; cursor:pointer; min-height: 36px; }
+#rebirth-buy-all { background:#ffe27a; color:#1d1730; }
+#rebirth-buy-all:disabled { opacity:.45; cursor:not-allowed; }
 #kensinger-sprite.exploding { animation: rebirthExplode 0.9s ease-out forwards; }
 @keyframes rebirthExplode { 0%{transform:scale(1);filter:brightness(1)} 55%{transform:scale(1.7) rotate(18deg);filter:brightness(2.4)} 100%{transform:scale(0);opacity:0;filter:brightness(4)} }
 .tony-friend { position: fixed; z-index: 80; width: 54px; height: 54px; border-radius: 50%; background: #fff center/cover no-repeat; border: 3px solid #d14b2f; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.28); user-select:none; }
 .mini-tony { position: fixed; z-index: 74; width: 24px; height: 24px; border-radius: 50%; background: #fff center/cover no-repeat; border: 2px solid #d14b2f; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.22); }
 .pepperoni { position: fixed; z-index: 75; width: 34px; height: 34px; border-radius: 50%; background: #c83224 center/cover no-repeat; border: 3px solid #f4c15d; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.25); }
 .pepperoni.golden { background: gold; border-color: #fff3a0; }
+.legend-bair { position: fixed; z-index: 83; width: 48px; height: 48px; border-radius: 50%; background: #fff center/cover no-repeat; border: 3px solid #6742d8; box-shadow: 0 4px 16px rgba(0,0,0,.35); pointer-events: none; transition: transform .18s ease, opacity .18s ease; }
+.legend-bair.golden { border-color: gold; filter: drop-shadow(0 0 10px gold); }
+.legend-bair.explode { transform: scale(1.9); opacity: 0; }
 #bair-flood {
   display: block; position: fixed; inset: auto 0 0 0; height: 0; z-index: 60; pointer-events: none;
   background-size: cover; background-position: center bottom; opacity: 0;
@@ -539,6 +545,15 @@ body.theme-dark #stock-toggle { background:#334028; color:#f2f4f8; }
 body.theme-dark .stock-row button { background:#f2f4f8; color:#15171c; }
 #bair-barrage-status { margin-top:4px; font-size:11px; color:#54606d; }
 body.theme-dark #bair-barrage-status { color:#aab2bf; }
+.fullscreen-hud { display:none; position:fixed; inset:0; z-index:100010; background:rgba(9,12,20,.96); color:#fff; overflow:auto; padding:24px; }
+.fullscreen-hud.open { display:block; }
+.hud-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+.hud-head h2 { margin:0; font-size:22px; }
+.hud-close { border:none; border-radius:8px; padding:9px 12px; font-weight:bold; cursor:pointer; }
+.achievement-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; }
+.achievement-card { border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:12px; background:rgba(255,255,255,.06); }
+.achievement-card.done { border-color:gold; box-shadow:0 0 12px rgba(255,215,0,.18); }
+.hud-launch-btn { width:100%; margin-top:10px; padding:10px 12px; border:none; border-radius:8px; background:#171725; color:#fff; font-weight:bold; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -550,6 +565,7 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
     <div id="score-text">Kensingers: <span id="count">0</span></div>
     <div id="multiplier-notice"></div>
     <div id="perm-multiplier-notice"></div>
+    <div id="manual-click-power-notice"></div>
         <div id="farm-panel" class="collapsed">
       <button id="farm-toggle" onclick="toggleFarmPanel()">🌾</button>
       <span id="farm-ready-badge">0</span>
@@ -589,6 +605,7 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
         <div id="stock-title">Bair Banking</div>
         <div id="stock-status">Prices update every minute.</div>
         <div id="stock-list"></div>
+        <button class="hud-launch-btn" onclick="openChangeroom()">Changeroom</button>
       </div>
     </div>
     <div id="dev-panel">
@@ -692,8 +709,8 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
           onclick="buyUpgrade('up-cross-breeding',50000000,'flag',0,'none')"
           onmouseover="showTip(this,'Cross Breeding','Allows hidden crop discoveries through farm patterns',50000000)"
           onmouseout="hideTip()">🧬</button>
-        <button class="up-btn" id="up-adkins-net-1" onclick="buyUpgrade('up-adkins-net-1',100000000,'flag',0,'none')" onmouseover="showTip(this,'Adkins Net 1','Spreads Adkins out by 1%',100000000)" onmouseout="hideTip()">🕸️</button>
-        <button class="up-btn" id="up-adkins-net-2" onclick="buyUpgrade('up-adkins-net-2',250000000,'flag',0,'none')" onmouseover="showTip(this,'Adkins Net 2','Spreads Adkins out by 1%',250000000)" onmouseout="hideTip()">🕸️</button>
+        <button class="up-btn" id="up-adkins-net-1" onclick="buyUpgrade('up-adkins-net-1',100000000,'flag',0,'none')" onmouseover="showTip(this,'Adkins Net 1','Spreads Adkins out by 5%',100000000)" onmouseout="hideTip()">🕸️</button>
+        <button class="up-btn" id="up-adkins-net-2" onclick="buyUpgrade('up-adkins-net-2',250000000,'flag',0,'none')" onmouseover="showTip(this,'Adkins Net 2','Spreads Adkins out by 5%',250000000)" onmouseout="hideTip()">🕸️</button>
         <button class="up-btn" id="up-bairllion"
           onclick="buyUpgrade('up-bairllion',1000000000,'flag',0,'none')"
           onmouseover="showTip(this,'A Bairllion','Adds a permanent 2x global multiplier to everything',1000000000)"
@@ -728,7 +745,17 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
           <img src="https://cdn.discordapp.com/attachments/1489453570230059068/1501722601704263871/490256907_1478851226821379_7390752593165406305_n201.png?ex=69fd1ba8&amp;is=69fbca28&amp;hm=6938eb24b93292d7a7d35bf664b1acc069c52b0ff09b5b7e3b668f239af36a2b&amp;"
             style="width:28px;height:28px;border-radius:50%;object-fit:cover;" alt="Bair Banking">
         </button>
-        <button class="up-btn" id="up-tony-town" onclick="buyUpgrade('up-tony-town',10000000000000,'flag',0,'none')" onmouseover="showTip(this,'Tony Town','Adds +1B CPS, +1M click power, and mini Tony collectors',10000000000000)" onmouseout="hideTip()">🏘️</button>
+        <button class="up-btn" id="up-cps-surge" onclick="buyUpgrade('up-cps-surge',2500000000000,'flag',0,'none')" onmouseover="showTip(this,'CPS Surge','All normal CPS upgrades are 10x stronger. Tony Town is not affected.',2500000000000)" onmouseout="hideTip()">📈</button>
+        <button class="up-btn" id="up-tony-town" onclick="buyUpgrade('up-tony-town',100000000000000,'flag',0,'none')" onmouseover="showTip(this,'Tony Town','Adds +1B CPS, +1M click power, and mini Tony collectors',100000000000000)" onmouseout="hideTip()">🏘️</button>
+        <button class="up-btn" id="up-laser-speed" onclick="buyUpgrade('up-laser-speed',1000000000000000,'flag',0,'none')" onmouseover="showTip(this,'Laser Lens','Kensinger Laser fires every 1 second after it is unlocked.',1000000000000000)" onmouseout="hideTip()">🔦</button>
+        <button class="up-btn" id="up-cps-overdrive" onclick="buyUpgrade('up-cps-overdrive',1000000000000000,'flag',0,'none')" onmouseover="showTip(this,'CPS Overdrive','All normal CPS upgrades gain another 5x. Tony Town is not affected.',1000000000000000)" onmouseout="hideTip()">🚀</button>
+        <button class="up-btn" id="up-pepperoni-payday-1" onclick="buyUpgrade('up-pepperoni-payday-1',10000000000000,'flag',0,'none')" onmouseover="showTip(this,'Pepperoni Payday I','Pepperonis grant bonus Kensingers when collected.',10000000000000)" onmouseout="hideTip()">🍕</button>
+        <button class="up-btn" id="up-pepperoni-payday-2" onclick="buyUpgrade('up-pepperoni-payday-2',1000000000000000,'flag',0,'none')" onmouseover="showTip(this,'Pepperoni Payday II','Pepperoni money rewards improve again.',1000000000000000)" onmouseout="hideTip()">🍕</button>
+        <button class="up-btn" id="up-pepperoni-payday-3" onclick="buyUpgrade('up-pepperoni-payday-3',100000000000000000,'flag',0,'none')" onmouseover="showTip(this,'Pepperoni Payday III','Pepperonis reach their late-game money reward.',100000000000000000)" onmouseout="hideTip()">🍕</button>
+        <button class="up-btn" id="up-legend-bair" onclick="buyUpgrade('up-legend-bair',10000000000000000,'flag',0,'none')" onmouseover="showTip(this,'The Legend of Bair','Summons Bairs that fly into Kensinger and explode for click-power based rewards.',10000000000000000)" onmouseout="hideTip()">🌠</button>
+        <button class="up-btn" id="up-economic-boom" onclick="buyUpgrade('up-economic-boom',50000000000000000,'flag',0,'none')" onmouseover="showTip(this,'Economic Boom','Bair Banking gets more expensive and more volatile, but far more profitable on average.',50000000000000000)" onmouseout="hideTip()">📊</button>
+        <button class="up-btn" id="up-bair-prophecy" onclick="buyUpgrade('up-bair-prophecy',250000000000000000,'flag',0,'none')" onmouseover="showTip(this,'Bair Prophecy','Legend Bairs have a 10% base chance to be golden for triple output.',250000000000000000)" onmouseout="hideTip()">🔮</button>
+        <button class="up-btn" id="up-bair-tide-clock" onclick="buyUpgrade('up-bair-tide-clock',250000000000000000,'flag',0,'none')" onmouseover="showTip(this,'Flood Clock','Bair Flood progress gains 100 clicks every minute.',250000000000000000)" onmouseout="hideTip()">🌊</button>
       </div>
     </div>
 
@@ -805,6 +832,7 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
         </span>
         <span class="price-tag" id="price-bairBank">250B</span>
       </button>
+      <button class="hud-launch-btn" onclick="openAchievements()">Achievements</button>
     </div>
     <!-- Rebirth Tab -->
     <div id="rebirth-tab" class="tab-content">
@@ -853,8 +881,22 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
         <h3>🆕 Updates</h3>
         <button class="save-btn" id="btn-read-updates" onclick="showUpdateLog(true)">Read Updates</button>
       </div>
+
+      <div class="settings-section" id="admin-autoclick-section" style="display:none">
+        <h3>🖱️ Admin Autoclicker</h3>
+        <p>Counts as player clicks for Bair Flood progress. Unlock with !AUTOCLICK, !CLICK, !CLICKER, or !AUTO.</p>
+        <input type="number" id="admin-autoclick-cps" min="0" max="200" step="1" value="20" oninput="setAdminAutoCps(this.value)">
+      </div>
     </div>
   </div>
+</div>
+<div id="achievements-hud" class="fullscreen-hud">
+  <div class="hud-head"><h2>Achievements</h2><button class="hud-close" onclick="closeAchievements()">Close</button></div>
+  <div id="achievement-list" class="achievement-grid"></div>
+</div>
+<div id="changeroom-hud" class="fullscreen-hud">
+  <div class="hud-head"><h2>Changeroom</h2><button class="hud-close" onclick="closeChangeroom()">Close</button></div>
+  <div id="changeroom-body"></div>
 </div>
 
 <div id="reset-modal">
@@ -880,6 +922,7 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
         <p>Spend your rebirth points before returning to the farm.</p>
       </div>
       <div id="rebirth-points-readout">0 RP</div>
+      <button id="rebirth-buy-all" onclick="buyAllRebirthUpgrades()">Buy All: 0 RP</button>
       <button id="rebirth-close" onclick="closeRebirthMenu()">Done</button>
     </div>
     <div id="rebirth-tree"></div>
@@ -897,7 +940,7 @@ body.theme-dark #bair-barrage-status { color:#aab2bf; }
 // ═══════════════════════════════════════════════════════════
 const SAVE_KEY = 'kensingerClicker_save';
 const GROWTH   = 1.15;
-const _CUR_VERSION = '1.5';
+const _CUR_VERSION = '2.2.0';
 const TONY_IMG = 'TonyImage.png';
 const PEPPERONI_IMG = 'https://www.ctifoods.com/wp-content/uploads/2025/06/pepperoni-liguria-copy-1.png';
 const BAIR_IMG = 'BairUpgradeImages.png';
@@ -936,7 +979,17 @@ const S = {
   farmTab:          'plots',
   farmOpen:         false,
   stockOpen:        false,
-  devMode:          false
+  devMode:          false,
+  adminAutoClicker: false,
+  adminAutoCps:     20,
+  trueManualClicks: 0,
+  manualGoldClicks: 0,
+  manualGreenClicks:0,
+  manualPepperoniClicks:0,
+  freeCropCredits:  0,
+  bairFloodsSummoned: 0,
+  legendBairNextAt: 0,
+  changeroomUnlocked:false
 };
 
 // Pirates CPS tracking (manual clicks only, not Adkins)
@@ -968,7 +1021,8 @@ function getBaseStatePatch() {
     officeOwned:0, assistantOwned:0, bairPowerOwned:0, bairBankOwned:0, bought:{}, seen:{}, codes:{}, settings:{ theme:'light', roundedDisplay:false, priceAbbreviations:true },
     farmClockClicks:0, lastFarmGrowthAt:0, rebirthPoints:0, totalRebirths:0, rebirthUpgrades:{}, manualClickCount:0, pepperoniClaims:0, stocks:{ prices:{tonyInc:1,swordFarms:1,adkinsAirlines:1}, shares:{tonyInc:0,swordFarms:0,adkinsAirlines:0}, lastTick:0 },
     buffs:{ goldUntil:0, greenUntil:0, boostUntil:0, boostAmount:1, cpsPenaltyUntil:0, cpsBoostUntil:0, cpsBoostAmount:1, specialBlockUntil:0, specialBoostUntil:0, adkinsEfficiencyUntil:0, clickBoostUntil:0, bairBarrageUntil:0 },
-    flying:[], crops:[], farmPlots:Array(9).fill(null), unlockedCrops:{}, selectedCrop:'packetPatch', farmTab:'plots', farmOpen:false, stockOpen:false, devMode:false
+    flying:[], crops:[], farmPlots:Array(9).fill(null), unlockedCrops:{}, selectedCrop:'packetPatch', farmTab:'plots', farmOpen:false, stockOpen:false, devMode:false,
+    adminAutoClicker:false, adminAutoCps:20, trueManualClicks:0, manualGoldClicks:0, manualGreenClicks:0, manualPepperoniClicks:0, freeCropCredits:0, bairFloodsSummoned:0, legendBairNextAt:0, changeroomUnlocked:false
   };
 }
 
@@ -994,7 +1048,9 @@ function normalizeSaveState() {
   S.stocks.prices = Object.assign({tonyInc:1,swordFarms:1,adkinsAirlines:1}, S.stocks.prices || {});
   Object.keys(S.stocks.prices).forEach(id => { if (S.stocks.prices[id] > 10) S.stocks.prices[id] = 1; });
   S.stocks.shares = Object.assign({tonyInc:0,swordFarms:0,adkinsAirlines:0}, S.stocks.shares || {});
-  ['bairPowerOwned','bairBankOwned','rebirthPoints','totalRebirths','manualClickCount','pepperoniClaims','lastFarmGrowthAt'].forEach(k => { S[k] = Number(S[k]) || 0; });
+  ['bairPowerOwned','bairBankOwned','rebirthPoints','totalRebirths','manualClickCount','pepperoniClaims','lastFarmGrowthAt','adminAutoCps','trueManualClicks','manualGoldClicks','manualGreenClicks','manualPepperoniClicks','freeCropCredits','bairFloodsSummoned','legendBairNextAt'].forEach(k => { S[k] = Number(S[k]) || 0; });
+  S.adminAutoClicker = !!S.adminAutoClicker;
+  S.changeroomUnlocked = !!S.changeroomUnlocked;
   S.selectedCrop = S.selectedCrop || 'packetPatch';
   S.farmTab = S.farmTab || 'plots';
   restorePausedCropTimers();
@@ -1100,14 +1156,32 @@ const REBIRTH_UPGRADE_DATA = [
   { id: 'bankingSafety', name: 'Market Safety', icon: '📊', cost: 2500, max: 1, parent: 'bankingProfit', x: 595, y: 280, desc: 'Market losses cap at 25% and refresh 50% faster.' },
   { id: 'permaBanking', name: 'Perma Banking', icon: '🔐', cost: 5000, max: 1, parent: 'bankingSafety', x: 585, y: 390, desc: 'Bair Banking stays unlocked after rebirth.' },
   { id: 'bairFloodEfficiency', name: 'Flood Efficiency', icon: '🌊', cost: 1000, max: 1, parent: 'freshStart', x: 350, y: 500, desc: 'Bair Flood needs 750 manual clicks instead of 1000.' },
-  { id: 'bairOcean', name: 'Bair Ocean', icon: '🌌', cost: 5000, max: 1, parent: 'bairFloodEfficiency', x: 425, y: 590, desc: 'Bair Flood lasts 1.5x longer.' }
+  { id: 'bairOcean', name: 'Bair Ocean', icon: '🌌', cost: 5000, max: 1, parent: 'bairFloodEfficiency', x: 425, y: 590, desc: 'Bair Flood lasts 1.5x longer.' },
+  { id: 'manualTraining', name: 'Manual Training', icon: '👆', cost: 1000, max: 5, parent: 'freshStart', x: 780, y: 130, desc: 'True player clicks scale harder from lifetime rebirths.' },
+  { id: 'manualDiscipline', name: 'Manual Discipline', icon: '💪', cost: 10000, max: 5, parent: 'manualTraining', x: 880, y: 220, desc: '+8% true manual click strength per purchase.' },
+  { id: 'manualMastery', name: 'Manual Mastery', icon: '⚡', cost: 50000, max: 5, parent: 'manualDiscipline', x: 960, y: 335, desc: '+12% true manual click strength per purchase.' },
+  { id: 'rebirthDoubler', name: 'Point Doubler', icon: '✴️', cost: 50000, max: 3, parent: 'rebirthEfficiency', x: 795, y: 10, desc: 'Doubles rebirth points earned per purchase.' },
+  { id: 'bankedPotential', name: 'Banked Potential', icon: '💎', cost: 100000, max: 5, parent: 'rebirthDoubler', x: 910, y: 65, desc: 'Raises the unspent RP bonus ceiling toward 10x.' },
+  { id: 'requirementCrusher', name: 'Requirement Crusher', icon: '🧨', cost: 250000, max: 4, parent: 'rebirthDoubler', x: 1000, y: 150, desc: 'Further reduces rebirth requirements by 7% per purchase.' },
+  { id: 'legendYield', name: 'Bair Yield', icon: '🌠', cost: 10000, max: 4, parent: 'profitableKensingers', x: 805, y: 520, desc: 'Legend of Bair rewards gain +100% base output per purchase, up to 5x.' },
+  { id: 'legendCooldown', name: 'Bair Calling', icon: '📡', cost: 50000, max: 5, parent: 'legendYield', x: 910, y: 620, desc: 'Legend of Bair cooldown drops toward 45 seconds.' },
+  { id: 'legendGold', name: 'Golden Bairs', icon: '⭐', cost: 250000, max: 3, parent: 'legendYield', x: 1015, y: 705, desc: 'Golden Legend Bair chance increases, capped at 25%.' },
+  { id: 'legendCollector', name: 'Bair Sweep', icon: '🧹', cost: 1000000, max: 1, parent: 'legendGold', x: 910, y: 775, desc: 'Legend Bairs click flying Kensingers as they arrive.' },
+  { id: 'legendAfterglow', name: 'Bair Afterglow', icon: '☄️', cost: 2500000, max: 1, parent: 'legendCollector', x: 770, y: 745, desc: 'After every Legend wave finishes, gain 10x temporary multiplier for 10 seconds.' }
 ];
 
 function getRU(id) { return Math.max(0, Number(S.rebirthUpgrades && S.rebirthUpgrades[id]) || 0); }
-function getRebirthRequirement() { return Math.floor(10000000000 * Math.pow(1.35, S.totalRebirths || 0) * Math.pow(0.9, getRU('rebirthCost'))); }
-function getRebirthPointBankMult() { return 1 + (1.2 * (1 - Math.exp((-(Number(S.rebirthPoints) || 0)) / 2500))); }
+function getRebirthRequirement() { return Math.floor(10000000000 * Math.pow(1.35, S.totalRebirths || 0) * Math.pow(0.9, getRU('rebirthCost')) * Math.pow(0.93, getRU('requirementCrusher'))); }
+function getRebirthPointBankMult() {
+  const ceiling = 2.2 + getRU('bankedPotential') * 1.56;
+  return 1 + ((ceiling - 1) * (1 - Math.exp((-(Number(S.rebirthPoints) || 0)) / 2500)));
+}
 function getRebirthEarnMult() { return 1 + (getRU('freshStart') * 0.1) + (getRU('profitableKensingers') * 0.9) + (getRU('profitableKensingersPlus') * 0.02) + (getRU('midMomentum') * 0.05); }
-function getBairBarrageClickRequirement() { return getRU('bairFloodEfficiency') ? 750 : 1000; }
+function getBairBarrageClickRequirement() {
+  let req = getRU('bairFloodEfficiency') ? 750 : 1000;
+  if ((S.bairFloodsSummoned || 0) >= 4) req -= 100;
+  return Math.max(250, req);
+}
 function getBairBarrageDuration() { return (S.bought['up-bair-barrage'] ? 60000 : 30000) * (getRU('bairOcean') ? 1.5 : 1); }
 function getBairBarrageMult() { return S.buffs && S.buffs.bairBarrageUntil > Date.now() ? (S.bought['up-bair-barrage'] ? 5 : 2) : 1; }
 function getPendingRebirthPoints() {
@@ -1115,7 +1189,7 @@ function getPendingRebirthPoints() {
   if (S.kensingers < req) return 0;
   const base = S.kensingers / req;
   const softened = Math.pow(base, 0.82);
-  return Math.max(1, Math.floor(softened * Math.pow(1.1, getRU('rebirthEfficiency'))));
+  return Math.max(1, Math.floor(softened * Math.pow(1.1, getRU('rebirthEfficiency')) * Math.pow(2, getRU('rebirthDoubler'))));
 }
 
 const STOCK_DEFS = [
@@ -1124,7 +1198,7 @@ const STOCK_DEFS = [
   { id: 'adkinsAirlines', name: 'Adkins Airlines', seconds: 5, min: -0.70, max: 0.45 }
 ];
 function getStockBasePrice(stock) {
-  const clickMinute = getClickPower() * 60;
+  const clickMinute = getManualClickPower() * 60;
   return Math.max(1, Math.floor((getCPS() * stock.seconds) + clickMinute));
 }
 function getStockDef(id) { return STOCK_DEFS.find(stock => stock.id === id); }
@@ -1132,19 +1206,21 @@ function isBankingUnlocked() { return !!S.bought['up-bair-banking'] || !!getRU('
 function getStockPrice(id) {
   const stock = getStockDef(id);
   if (!stock) return 1;
-  return Math.max(1, Math.floor(getStockBasePrice(stock) * (S.stocks.prices[id] || 1)));
+  return Math.max(1, Math.floor(getStockBasePrice(stock) * (S.stocks.prices[id] || 1) * (S.bought['up-economic-boom'] ? 25 : 1)));
 }
 function tickStocks() {
   if (!isBankingUnlocked()) return;
   const now = Date.now();
-  const interval = getRU('bankingSafety') ? 40000 : 60000;
+  const interval = S.bought['up-economic-boom'] ? 20000 : (getRU('bankingSafety') ? 40000 : 60000);
   if (now - (S.stocks.lastTick || 0) < interval) return;
   S.stocks.lastTick = now;
   STOCK_DEFS.forEach(stock => {
-    const min = getRU('bankingSafety') ? Math.max(stock.min, -0.25) : stock.min;
-    const max = stock.max * (getRU('bankingProfit') ? 2 : 1);
-    const change = min + Math.random() * (max - min);
-    S.stocks.prices[stock.id] = Math.max(0.05, (S.stocks.prices[stock.id] || 1) * (1 + change));
+    let min = getRU('bankingSafety') ? Math.max(stock.min, -0.25) : stock.min;
+    let max = stock.max * (getRU('bankingProfit') ? 2 : 1);
+    if (S.bought['up-economic-boom']) { min = Math.max(min, -0.25); max = 4; }
+    const change = S.bought['up-economic-boom'] ? (1.4 + Math.random() * 3.2) : (min + Math.random() * (max - min));
+    const cap = S.bought['up-economic-boom'] ? 5 : Infinity;
+    S.stocks.prices[stock.id] = Math.max(0.05, Math.min(cap, (S.stocks.prices[stock.id] || 1) * (1 + change)));
   });
 }
 function buyStock(id) {
@@ -1224,6 +1300,69 @@ function buyRebirthUpgrade(id) {
   if (id === 'permaTony' || id === 'tonyCaretaker' || id === 'tonyCaretaker2') ensureTony();
   renderRebirthUI(); updateUI(); saveGame();
 }
+function getRebirthLayout() {
+  const placed = [];
+  const layout = {};
+  REBIRTH_UPGRADE_DATA.forEach(up => {
+    const item = Object.assign({}, up);
+    let guard = 0;
+    while (placed.some(p => Math.abs(p.x - item.x) < 86 && Math.abs(p.y - item.y) < 86) && guard < 80) {
+      item.y += 92;
+      if (item.y > 785) { item.y = 20 + ((item.y + 37) % 60); item.x += 96; }
+      guard++;
+    }
+    placed.push(item);
+    layout[item.id] = item;
+  });
+  return layout;
+}
+function getRebirthBuyAllPlan() {
+  const original = S.rebirthUpgrades;
+  const sim = Object.assign({}, original);
+  let available = Math.floor(S.rebirthPoints || 0), total = 0, bought = 0, changed = true, guard = 0;
+  const oldGetRU = getRU;
+  const simGetRU = id => Math.max(0, Number(sim[id]) || 0);
+  while (changed && guard++ < 1000) {
+    changed = false;
+    for (const up of REBIRTH_UPGRADE_DATA) {
+      const owned = simGetRU(up.id);
+      if (owned >= up.max) continue;
+      if (up.parent && simGetRU(up.parent) <= 0) continue;
+      if (up.cost === 0 && (S.totalRebirths <= 0 || owned > 0)) continue;
+      let cost = 0;
+      if (up.cost > 0) {
+        cost = Math.ceil(up.cost * Math.pow(1.15, owned));
+        if (up.id === 'retainment' && owned >= 2) cost = 100;
+      }
+      if (available >= cost) {
+        available -= cost;
+        total += cost;
+        sim[up.id] = owned + 1;
+        bought++;
+        changed = true;
+      }
+    }
+  }
+  return { total, bought };
+}
+function buyAllRebirthUpgrades() {
+  let bought = 0, changed = true, guard = 0;
+  while (changed && guard++ < 1000) {
+    changed = false;
+    for (const up of REBIRTH_UPGRADE_DATA) {
+      if (canBuyRebirthUpgrade(up)) {
+        const cost = getRebirthUpgradeCost(up);
+        S.rebirthPoints -= cost;
+        S.rebirthUpgrades[up.id] = getRU(up.id) + 1;
+        bought++;
+        changed = true;
+      }
+    }
+  }
+  if (bought) {
+    updateShopUI(); ensureTony(); renderRebirthUI(); updateUI(); saveGame();
+  }
+}
 function renderRebirthUI() {
   const summary = document.getElementById('rebirth-summary');
   const tree = document.getElementById('rebirth-tree');
@@ -1234,17 +1373,25 @@ function renderRebirthUI() {
   summary.innerHTML = 'Rebirth Points: <strong>' + Math.floor(S.rebirthPoints).toLocaleString() + '</strong><br>Rebirths: ' + S.totalRebirths.toLocaleString() + '<br>Requirement: ' + formatPrice(req) + '<br>Points if reborn now: ' + pts.toLocaleString() + '<br>Permanent earnings: ' + formatStat(getRebirthEarnMult()) + 'x<br>Unspent RP bonus: ' + formatStat(getRebirthPointBankMult()) + 'x';
   const readout = document.getElementById('rebirth-points-readout');
   if (readout) readout.textContent = Math.floor(S.rebirthPoints).toLocaleString() + ' Rebirth Points';
+  const buyAll = document.getElementById('rebirth-buy-all');
+  if (buyAll) {
+    const plan = getRebirthBuyAllPlan();
+    buyAll.textContent = plan.bought ? ('Buy All: ' + plan.bought.toLocaleString() + ' upgrades for ' + plan.total.toLocaleString() + ' RP') : 'Buy All: nothing affordable';
+    buyAll.disabled = !plan.bought;
+  }
   btn.disabled = pts <= 0;
   btn.textContent = pts > 0 ? ('Rebirth for ' + pts.toLocaleString() + ' point' + (pts === 1 ? '' : 's')) : ('Need ' + formatPrice(req));
   tree.innerHTML = '';
+  const layout = getRebirthLayout();
   REBIRTH_UPGRADE_DATA.forEach(up => {
-    if (up.parent) drawRebirthLine(tree, up);
+    if (up.parent) drawRebirthLine(tree, layout[up.id], layout);
   });
   REBIRTH_UPGRADE_DATA.forEach(up => {
+    const pos = layout[up.id] || up;
     const owned = getRU(up.id), cost = getRebirthUpgradeCost(up);
     const node = document.createElement('button');
     node.className = 'rebirth-node' + (owned >= up.max ? ' bought' : '') + (canBuyRebirthUpgrade(up) ? '' : ' locked');
-    node.style.left = up.x + 'px'; node.style.top = up.y + 'px';
+    node.style.left = pos.x + 'px'; node.style.top = pos.y + 'px';
     node.innerHTML = '<span class="node-icon">' + up.icon + '</span><span>' + up.name + '</span><span>' + owned + '/' + up.max + '</span><span>' + (owned >= up.max ? 'MAX' : (cost ? cost + ' RP' : 'FREE')) + '</span>';
     node.title = up.desc;
     node.onmouseover = function(){ showTip(node, up.name, getRebirthUpgradeDetails(up), owned >= up.max ? 'MAXED' : (cost ? cost + ' RP' : 'FREE')); };
@@ -1258,10 +1405,10 @@ function getRebirthUpgradeDetails(up) {
   const lock = up.parent && getRU(up.parent) <= 0 ? ' Requires ' + REBIRTH_UPGRADE_DATA.find(p => p.id === up.parent).name + '.' : '';
   return up.desc + ' Owned: ' + owned + '/' + up.max + '.' + lock;
 }
-function drawRebirthLine(tree, up) {
-  const parent = REBIRTH_UPGRADE_DATA.find(u => u.id === up.parent);
+function drawRebirthLine(tree, up, layout) {
+  const parent = layout[up.parent] || REBIRTH_UPGRADE_DATA.find(u => u.id === up.parent);
   if (!parent) return;
-  const x1 = parent.x + 39, y1 = parent.y + 39, x2 = up.x + 39, y2 = up.y + 39;
+  const x1 = parent.x + 37, y1 = parent.y + 37, x2 = up.x + 37, y2 = up.y + 37;
   const dx = x2 - x1, dy = y2 - y1;
   const line = document.createElement('div');
   line.className = 'rebirth-line';
@@ -1349,6 +1496,7 @@ function scheduleBairBarrageFrame() {
 function triggerBairBarrage() {
   const now = Date.now();
   S.buffs.bairBarrageUntil = now + getBairBarrageDuration();
+  S.bairFloodsSummoned = (S.bairFloodsSummoned || 0) + 1;
   _bairBarrageStartedAt = now;
   const flood = document.getElementById('bair-flood');
   const sprite = document.getElementById('bair-barrage-sprite');
@@ -1373,7 +1521,7 @@ function formatBigNumber(value, forceInteger) {
   const n = forceInteger ? Math.floor(value) : value;
   if (!S.settings.priceAbbreviations) return forceInteger ? Math.floor(n).toLocaleString() : n.toLocaleString();
   const abs = Math.abs(n);
-  const units = [{ v: 1e15, s: 'Qa' }, { v: 1e12, s: 'T' }, { v: 1e9, s: 'B' }, { v: 1e6, s: 'M' }, { v: 1e3, s: 'K' }];
+  const units = [{ v: 1e21, s: 'Sx' }, { v: 1e18, s: 'Qi' }, { v: 1e15, s: 'Qa' }, { v: 1e12, s: 'T' }, { v: 1e9, s: 'B' }, { v: 1e6, s: 'M' }, { v: 1e3, s: 'K' }];
   for (const unit of units) {
     if (abs >= unit.v) {
       const scaled = n / unit.v;
@@ -1396,37 +1544,55 @@ function getTemporaryMult() { syncBuffs(); return S.multiplier * goldMult * gree
 function getEffectiveMult() { return getTemporaryMult() * getTotalPermanentMult(); }
 function getSpecialBenefitMult() { return S.buffs.specialBoostUntil > Date.now() && (goldMult > 1 || greenMult > 1) ? 2 : 1; }
 function getFarmCpsMult()  { syncBuffs(); return S.buffs.cpsBoostUntil > Date.now() ? S.buffs.cpsBoostAmount : 1; }
+function getCpsUpgradeMult() { return (S.bought['up-cps-surge'] ? 10 : 1) * (S.bought['up-cps-overdrive'] ? 5 : 1); }
+function getManualClickRebirthMult() {
+  const r = Number(S.totalRebirths) || 0;
+  let base = 1;
+  if (r >= 1e15) base = 50;
+  else if (r > 25e12) base = 25;
+  else if (r > 1e12) base = 15;
+  else if (r > 1e9) base = 10;
+  else if (r > 1e7) base = 7;
+  else if (r > 1e6) base = 5;
+  else if (r > 1e5) base = 4;
+  else if (r > 1e4) base = 3;
+  else if (r > 100) base = 2;
+  return base * Math.pow(1.08, getRU('manualDiscipline')) * Math.pow(1.12, getRU('manualMastery'));
+}
 
 function getClickPower() {
   const glove = getGloveMult();
   return ((1 + S.clickOwned) * glove + getBairPowerBonus() + getBairBankClickBonus() + (S.bought['up-tony-town'] ? 1000000 : 0)) * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult() * getClickBoostMult();
 }
+function getManualClickPower() { return getClickPower() * getManualClickRebirthMult(); }
 
 function getCPS() {
   syncBuffs();
   if (S.buffs.cpsPenaltyUntil > Date.now()) return 0;
   const cb = getClassBase();
-  const base = (S.autoOwned * getAutoBase()) + (S.classOwned * cb * getAutoSynergyMult()) + (S.biologyOwned * 2500 * getAutoSynergyMult()) + getBairBankCpsBonus() + (S.bought['up-tony-town'] ? 1000000000 : 0);
+  const normalBase = ((S.autoOwned * getAutoBase()) + (S.classOwned * cb * getAutoSynergyMult()) + (S.biologyOwned * 2500 * getAutoSynergyMult()) + getBairBankCpsBonus()) * getCpsUpgradeMult();
+  const base = normalBase + (S.bought['up-tony-town'] ? 1000000000 : 0);
   return base * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
 }
 function getCpsRewardBase() {
   syncBuffs();
   if (S.buffs.cpsPenaltyUntil > Date.now()) return 0;
   const cb = getClassBase();
-  const base = (S.autoOwned * getAutoBase()) + (S.classOwned * cb * getAutoSynergyMult()) + (S.biologyOwned * 2500 * getAutoSynergyMult()) + getBairBankCpsBonus() + (S.bought['up-tony-town'] ? 1000000000 : 0);
+  const normalBase = ((S.autoOwned * getAutoBase()) + (S.classOwned * cb * getAutoSynergyMult()) + (S.biologyOwned * 2500 * getAutoSynergyMult()) + getBairBankCpsBonus()) * getCpsUpgradeMult();
+  const base = normalBase + (S.bought['up-tony-town'] ? 1000000000 : 0);
   const cappedTemporary = Math.min((S.multiplier || 1) * goldMult * greenMult * getSpecialBenefitMult() * getBairBarrageMult(), 3);
   return base * cappedTemporary * getTotalPermanentMult() * getPiratesMult() * getFarmCpsMult();
 }
 
 // effective click-per-second label for auto (single unit contribution)
 function getSingleAutoContrib() {
-  return getAutoBase() * getEffectiveMult() * getPiratesMult();
+  return getAutoBase() * getCpsUpgradeMult() * getEffectiveMult() * getPiratesMult();
 }
 function getSingleClassContrib() {
-  return getClassBase() * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
+  return getClassBase() * getAutoSynergyMult() * getCpsUpgradeMult() * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
 }
 function getSingleBiologyContrib() {
-  return 2500 * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
+  return 2500 * getAutoSynergyMult() * getCpsUpgradeMult() * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
 }
 function getSingleClickContrib() {
   return getGloveMult() * getAutoSynergyMult() * getEffectiveMult() * getPiratesMult(); // single Click Power upgrade contribution
@@ -1438,7 +1604,7 @@ function getBairBankDisplayClickBonus() {
   return 10000 * getEffectiveMult() * getPiratesMult() * getClickBoostMult();
 }
 function getBairBankDisplayCpsBonus() {
-  return 1000000 * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
+  return 1000000 * getCpsUpgradeMult() * getEffectiveMult() * getPiratesMult() * getFarmCpsMult();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1446,13 +1612,22 @@ function getBairBankDisplayCpsBonus() {
 // ═══════════════════════════════════════════════════════════
 const MAX_CPS_FOR_PIRATES = 10; // clicks/sec for full 2x
 
-function recordManualClick() {
+function addBairFloodClicks(amount) {
+  const now = Date.now();
+  if (S.buffs.bairBarrageUntil <= now) {
+    const req = getBairBarrageClickRequirement();
+    const before = (S.manualClickCount || 0) % req;
+    S.manualClickCount = (S.manualClickCount || 0) + Math.max(0, amount || 0);
+    const after = (S.manualClickCount || 0) % req;
+    if (amount > 0 && (before + amount >= req || after === 0)) triggerBairBarrage();
+  }
+}
+
+function recordManualClick(isTrueManual) {
   const now = Date.now();
   manualClickTimestamps.push(now);
-  if (S.buffs.bairBarrageUntil <= now) {
-    S.manualClickCount = (S.manualClickCount || 0) + 1;
-    if (S.manualClickCount % getBairBarrageClickRequirement() === 0) triggerBairBarrage();
-  }
+  addBairFloodClicks(1);
+  if (isTrueManual) S.trueManualClicks = (S.trueManualClicks || 0) + 1;
   // keep only last 2 seconds
   const cutoff = now - 2000;
   manualClickTimestamps = manualClickTimestamps.filter(t => t > cutoff);
@@ -1483,8 +1658,8 @@ const kensingerSprite = document.getElementById('kensinger-sprite');
 let spaceHeld = false;
 
 function doClick(isManual) {
-  if (isManual) recordManualClick();
-  S.kensingers += getClickPower();
+  if (isManual) recordManualClick(true);
+  S.kensingers += isManual ? getManualClickPower() : getClickPower();
   if (S.officeOwned > 0) {
     let chance = S.officeOwned * 0.001 * getBairBarrageMult();
     if (S.bought['up-apocalypse']) chance *= 0.5;
@@ -1521,6 +1696,13 @@ setInterval(() => {
   updateUI();
   saveGame();
 }, 1000);
+setInterval(runAdminAutoClicks, 1000);
+setInterval(function(){
+  if (S.bought['up-bair-tide-clock'] && S.buffs.bairBarrageUntil <= Date.now()) {
+    addBairFloodClicks(100);
+    updateUI(); saveGame();
+  }
+}, 60000);
 
 // ═══════════════════════════════════════════════════════════
 //  SHOP
@@ -1538,18 +1720,28 @@ function getBulkCost(base, owned, amount) {
   if (amount <= 0) return 0;
   return Math.floor(base * (Math.pow(GROWTH, owned) * (Math.pow(GROWTH, amount) - 1)) / (GROWTH - 1));
 }
+function getShopBulkCost(type, base, owned, amount) {
+  if (type === 'auto' && owned === 0 && amount > 0) {
+    return getBulkCost(base, 1, amount - 1);
+  }
+  return getBulkCost(base, owned, amount);
+}
 function getMaxAffordable(base, owned, money) {
   if (money < Math.floor(base * Math.pow(GROWTH, owned))) return 0;
   return Math.floor(Math.log(((money * (GROWTH - 1)) / (base * Math.pow(GROWTH, owned))) + 1) / Math.log(GROWTH));
+}
+function getShopMaxAffordable(type, base, owned, money) {
+  if (type === 'auto' && owned === 0) return 1 + getMaxAffordable(base, 1, money);
+  return getMaxAffordable(base, owned, money);
 }
 
 function buy(type, base) {
   const caps   = { office: 10, assistant: getAssistantCap() };
   const owned  = S[type + 'Owned'];
   base = getEffectiveBasePrice(type, base);
-  let amount   = buyMode === 'all' ? getMaxAffordable(base, owned, S.kensingers) : buyMode;
+  let amount   = buyMode === 'all' ? getShopMaxAffordable(type, base, owned, S.kensingers) : buyMode;
   if (caps[type]) amount = Math.min(amount, caps[type] - owned);
-  const cost   = getBulkCost(base, owned, amount);
+  const cost   = getShopBulkCost(type, base, owned, amount);
   if (S.kensingers >= cost && amount > 0) {
     S.kensingers -= cost;
     S[type + 'Owned'] += amount;
@@ -1590,7 +1782,17 @@ const UPGRADES = [
   { id: 'up-adkins-acceleration', cost: 250000000000, showAt: 175000000000 },
   { id: 'up-bair-barrage', cost: 250000000000, showAt: 175000000000 },
   { id: 'up-bair-banking', cost: 1000000000000, showAt: 700000000000 },
-  { id: 'up-tony-town', cost: 10000000000000, showAt: 7000000000000 },
+  { id: 'up-cps-surge', cost: 2500000000000, showAt: 1800000000000 },
+  { id: 'up-pepperoni-payday-1', cost: 10000000000000, showAt: 7000000000000 },
+  { id: 'up-tony-town', cost: 100000000000000, showAt: 70000000000000 },
+  { id: 'up-laser-speed', cost: 1000000000000000, showAt: 700000000000000 },
+  { id: 'up-cps-overdrive', cost: 1000000000000000, showAt: 700000000000000 },
+  { id: 'up-pepperoni-payday-2', cost: 1000000000000000, showAt: 700000000000000 },
+  { id: 'up-legend-bair', cost: 10000000000000000, showAt: 7000000000000000 },
+  { id: 'up-economic-boom', cost: 50000000000000000, showAt: 35000000000000000 },
+  { id: 'up-pepperoni-payday-3', cost: 100000000000000000, showAt: 70000000000000000 },
+  { id: 'up-bair-prophecy', cost: 250000000000000000, showAt: 175000000000000000 },
+  { id: 'up-bair-tide-clock', cost: 250000000000000000, showAt: 175000000000000000 },
 ];
 const UPGRADE_INFO = {
   'up-pointer': ['Getting Started', () => 'Doubles Auto-Kensinger speed. Current single Auto-Kensinger: ' + formatStat(getSingleAutoContrib()) + '/s.'],
@@ -1608,8 +1810,8 @@ const UPGRADE_INFO = {
   'up-todd-farm': ['Todd Sword Farm', () => 'Unlocks the expandable crop farm. Crop costs and rewards scale from current CPS.'],
   'up-crop-speed': ['Packet Fertilizer', () => 'All crops finish 10 seconds faster.'],
   'up-cross-breeding': ['Cross Breeding', () => 'Allows hidden crop discoveries through farm patterns.'],
-  'up-adkins-net-1': ['Adkins Net 1', () => 'Spreads Adkins out by 1%.'],
-  'up-adkins-net-2': ['Adkins Net 2', () => 'Spreads Adkins out by 1%.'],
+  'up-adkins-net-1': ['Adkins Net 1', () => 'Spreads Adkins out by 5%.'],
+  'up-adkins-net-2': ['Adkins Net 2', () => 'Spreads Adkins out by 5%.'],
   'up-friend': ['Friend', () => 'Adds Tony. Click Tony for current click power: ' + formatStat(getClickPower()) + '.'],
   'up-better-friend': ['Better Friend', () => 'Pepperoni chance improves to 1/90 and Tony moves 10% slower.'],
   'up-best-friend': ['Best Friend', () => 'Pepperoni chance improves to 1/50 and every 10 claimed pepperonis spawns a golden pepperoni.'],
@@ -1619,8 +1821,18 @@ const UPGRADE_INFO = {
   'up-adkins-acceleration': ['Adkins Acceleration', () => 'Adkins click 2x faster.'],
   'up-bair-barrage': ['Bair Barrage', () => 'Manual clicks start a 2x event for 30 seconds, or 5x for 60 seconds after buying the upgrade. Clicks left: ' + (getBairBarrageClickRequirement() - ((S.manualClickCount || 0) % getBairBarrageClickRequirement())).toLocaleString() + '.'],
   'up-apocalypse': ['Kensinger Apocalypse', () => 'Green Kensingers spawn 50% of the time from special clicks, special-click spawns are halved, and green Kensingers grant 120 seconds of CPS.'],
-  'up-bair-banking': ['Bair Banking', () => 'Unlocks the Bair Banking HUD. Stock prices scale with current CPS plus 60 seconds of clicking.']
-  ,'up-tony-town': ['Tony Town', () => 'Adds +1B CPS and +1M click power, then spawns mini Tonys that collect specials and pepperonis.']
+  'up-bair-banking': ['Bair Banking', () => 'Unlocks the Bair Banking HUD. Stock prices scale with current CPS plus 60 seconds of clicking.'],
+  'up-cps-surge': ['CPS Surge', () => 'Normal CPS upgrades become 10x stronger. Tony Town stays separate. Current CPS multiplier: ' + formatStat(getCpsUpgradeMult()) + 'x.'],
+  'up-tony-town': ['Tony Town', () => 'Adds +1B CPS and +1M click power, then spawns mini Tonys that collect specials and pepperonis.'],
+  'up-laser-speed': ['Laser Lens', () => 'If Kensinger Laser is unlocked, it fires every 1 second instead of every 5 seconds.'],
+  'up-cps-overdrive': ['CPS Overdrive', () => 'Normal CPS upgrades gain another 5x. Tony Town stays separate. Current CPS multiplier: ' + formatStat(getCpsUpgradeMult()) + 'x.'],
+  'up-pepperoni-payday-1': ['Pepperoni Payday I', () => 'Pepperonis grant extra Kensingers equal to 200 x 10 x click power.'],
+  'up-pepperoni-payday-2': ['Pepperoni Payday II', () => 'Pepperoni money improves to 200 x 35 x click power.'],
+  'up-pepperoni-payday-3': ['Pepperoni Payday III', () => 'Pepperoni money improves to 200 x 75 x click power.'],
+  'up-legend-bair': ['The Legend of Bair', () => 'Every 90-120 seconds, 5-10 Bairs fly into Kensinger and explode for click-power rewards.'],
+  'up-economic-boom': ['Economic Boom', () => 'Bair Banking costs 25x more, refreshes faster, and becomes much more profitable on average.'],
+  'up-bair-prophecy': ['Bair Prophecy', () => 'Legend Bairs have a 10% base chance to be golden. Golden Bairs give triple output.'],
+  'up-bair-tide-clock': ['Flood Clock', () => 'Bair Flood progress gains 100 clicks every minute, even without late-game clicking.']
 };
 
 function buyUpgrade(id, cost, stat, value, type) {
@@ -1679,7 +1891,7 @@ function setUpgradeImage(id, src, alt) {
 }
 
 function applyUpgradeArt() {
-  ['up-bairllion','up-bair-booster-1','up-bair-booster-2','up-bair-barrage','up-bair-banking'].forEach(id => setUpgradeImage(id, BAIR_IMG, 'Bair'));
+  ['up-bairllion','up-bair-booster-1','up-bair-booster-2','up-bair-barrage','up-bair-banking','up-legend-bair','up-bair-prophecy','up-bair-tide-clock'].forEach(id => setUpgradeImage(id, BAIR_IMG, 'Bair'));
   ['up-todd-class','up-todd-farm','up-crop-speed','up-cross-breeding'].forEach(id => setUpgradeImage(id, TODD_IMG, 'Todd Sword'));
 }
 
@@ -1762,6 +1974,66 @@ function devGiveAllUpgrades() {
   });
   updateUI(); saveGame();
 }
+function setAdminAutoCps(value) {
+  S.adminAutoCps = Math.max(0, Math.min(200, Number(value) || 0));
+  updateAdminAutoClickerUI();
+  saveGame();
+}
+function updateAdminAutoClickerUI() {
+  const section = document.getElementById('admin-autoclick-section');
+  const input = document.getElementById('admin-autoclick-cps');
+  if (section) section.style.display = S.adminAutoClicker ? 'flex' : 'none';
+  if (input && Number(input.value) !== Number(S.adminAutoCps || 20)) input.value = S.adminAutoCps || 20;
+}
+function getAchievementData() {
+  return [
+    { id:'king', name:'King of Kensingers', done:(S.manualGoldClicks||0)>=250 && (S.manualGreenClicks||0)>=250, progress:(S.manualGoldClicks||0) + '/250 gold, ' + (S.manualGreenClicks||0) + '/250 green', reward:'Gold/green Kensingers move 5% slower and unlock Golden Kensinger sprite.' },
+    { id:'bairWhisperer', name:'Bair Whisperer', done:(S.bairFloodsSummoned||0)>=4, progress:(S.bairFloodsSummoned||0) + '/4 Bair Floods', reward:'Bair Flood needs 100 fewer clicks and unlocks beach attire.' },
+    { id:'adkinsAuto', name:'Adkins Automation I', done:S.kensingers>=1000000 && (S.trueManualClicks||0)===0, progress:'Reach 1M with 0 true manual clicks', reward:'Adkins profit 1.25x and unlocks Adkins facial hair accessory.' },
+    { id:'pepperoniAddict', name:'Pepperoni Addict I', done:(S.manualPepperoniClicks||0)>=100, progress:(S.manualPepperoniClicks||0) + '/100 manual pepperonis', reward:'Unlocks future Kensinger Laser support and pepperoni crown.' }
+  ];
+}
+function openAchievements() {
+  const hud = document.getElementById('achievements-hud');
+  const list = document.getElementById('achievement-list');
+  if (!hud || !list) return;
+  list.innerHTML = '';
+  getAchievementData().forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'achievement-card' + (a.done ? ' done' : '');
+    card.innerHTML = '<strong>' + a.name + '</strong><br><small>' + a.progress + '</small><br><span>' + a.reward + '</span>';
+    list.appendChild(card);
+  });
+  hud.classList.add('open');
+}
+function closeAchievements() { const hud = document.getElementById('achievements-hud'); if (hud) hud.classList.remove('open'); }
+function openChangeroom() {
+  if (!S.changeroomUnlocked) {
+    const cost = 1000000000000000;
+    if (S.kensingers < cost) return;
+    S.kensingers -= cost;
+    S.changeroomUnlocked = true;
+    saveGame();
+  }
+  const hud = document.getElementById('changeroom-hud');
+  const body = document.getElementById('changeroom-body');
+  if (!hud || !body) return;
+  const unlocked = getAchievementData().filter(a => a.done).map(a => a.name);
+  body.innerHTML = '<p>Preview and equipment saves here. Unlocked looks: ' + (unlocked.length ? unlocked.join(', ') : 'none yet') + '.</p><p>Clothing slots: 3. Kensinger sprite slot: 1.</p>';
+  hud.classList.add('open');
+  updateUI();
+}
+function closeChangeroom() { const hud = document.getElementById('changeroom-hud'); if (hud) hud.classList.remove('open'); }
+function runAdminAutoClicks() {
+  if (!S.adminAutoClicker) return;
+  const cps = Math.floor(Number(S.adminAutoCps) || 0);
+  if (cps <= 0) return;
+  S.kensingers += getManualClickPower() * cps;
+  addBairFloodClicks(cps);
+  const now = Date.now();
+  for (let i = 0; i < Math.min(cps, 20); i++) manualClickTimestamps.push(now);
+  updateUI(); saveGame();
+}
 // ═══════════════════════════════════════════════════════════
 //  SECRET CODES
 // ═══════════════════════════════════════════════════════════
@@ -1781,6 +2053,21 @@ function redeemCode() {
   if (DEV_CODES.includes(code)) {
     enableDevMode();
     showCodeMsg('DEVELOPER MODE ENABLED!', 'ok');
+  } else if (['!AUTOCLICK','!CLICK','!CLICKER','!AUTO'].includes(code)) {
+    S.adminAutoClicker = true;
+    if (!S.adminAutoCps) S.adminAutoCps = 20;
+    showCodeMsg('ADMIN AUTOCLICKER ENABLED!', 'ok');
+    updateAdminAutoClickerUI();
+  } else if (code === 'BAIR') {
+    if (S.codes['BAIR']) return showCodeMsg('ALREADY USED!', 'err');
+    S.codes['BAIR'] = true;
+    S.rebirthPoints = (S.rebirthPoints || 0) + 5;
+    showCodeMsg('+5 REBIRTH POINTS!', 'ok');
+  } else if (code === 'SWORD') {
+    if (S.codes['SWORD']) return showCodeMsg('ALREADY USED!', 'err');
+    S.codes['SWORD'] = true;
+    S.freeCropCredits = (S.freeCropCredits || 0) + 2;
+    showCodeMsg('NEXT 2 PLANTED CROPS ARE FREE!', 'ok');
   } else if (code === 'TONY') {
     if (S.codes['TONY']) return showCodeMsg('TONY ALREADY VISITED!', 'err');
     S.codes['TONY'] = true;
@@ -1979,11 +2266,13 @@ function spawnSpecial(type, saved) {
     if (collected.has(kens)) return;
     collected.add(kens);
     removeSpecialElement(kens);
-    collectSpecialReward(type);
+    collectSpecialReward(type, true);
   };
 }
 
-function collectSpecialReward(type) {
+function collectSpecialReward(type, manual) {
+  if (manual && type === 'gold') S.manualGoldClicks = (S.manualGoldClicks || 0) + 1;
+  if (manual && type === 'green') S.manualGreenClicks = (S.manualGreenClicks || 0) + 1;
   if (type === 'gold') {
     if (S.bought['up-dividends']) {
       S.kensingers += getCpsRewardBase() * 60;
@@ -2055,11 +2344,18 @@ function spawnPepperoni(golden) {
   p.dataset.golden = golden ? '1' : '0';
   p.style.left = Math.max(10, Math.min(window.innerWidth - 40, tonyX + 15)) + 'px';
   p.style.top = Math.max(10, Math.min(window.innerHeight - 40, tonyY + 15)) + 'px';
-  p.onclick = () => collectPepperoni(p);
+  p.onclick = () => collectPepperoni(p, true);
   document.body.appendChild(p);
 }
-function collectPepperoni(p) {
+function getPepperoniMoneyBonusMult() {
+  if (S.bought['up-pepperoni-payday-3']) return 75;
+  if (S.bought['up-pepperoni-payday-2']) return 35;
+  if (S.bought['up-pepperoni-payday-1']) return 10;
+  return 0;
+}
+function collectPepperoni(p, manual) {
   if (!p || !document.body.contains(p)) return;
+  if (manual) S.manualPepperoniClicks = (S.manualPepperoniClicks || 0) + 1;
   const golden = p.dataset.golden === '1';
   p.remove();
   const mult = golden ? 2 : 1;
@@ -2067,6 +2363,8 @@ function collectPepperoni(p) {
   if (roll === 0) S.buffs.adkinsEfficiencyUntil = Date.now() + 60000 * mult;
   else if (roll === 1) S.kensingers += getCPS() * 120 * mult;
   else S.buffs.clickBoostUntil = Date.now() + 10000 * mult;
+  const moneyMult = getPepperoniMoneyBonusMult();
+  if (moneyMult > 0) S.kensingers += 200 * moneyMult * getClickPower() * mult;
   S.pepperoniClaims = (S.pepperoniClaims || 0) + 1;
   if (!golden && S.bought['up-best-friend'] && S.pepperoniClaims % 10 === 0) { spawnPepperoni(true); for (let i=0;i<3;i++) spawnSpecial('green'); }
   updateUI(); saveGame();
@@ -2105,6 +2403,67 @@ function collectMiniTonyTargets(t) {
       collectSpecialReward(sp.dataset.type);
     }
   });
+}
+function getLegendBairCooldownMs() {
+  const min = 45000, max = 120000 - getRU('legendCooldown') * 12000;
+  return Math.max(min, 90000 + Math.random() * Math.max(0, max - 90000));
+}
+function getLegendBairReward() {
+  return 200 * 100 * Math.min(5, 1 + getRU('legendYield')) * getClickPower();
+}
+function getLegendBairGoldenChance() {
+  return Math.min(0.25, (S.bought['up-bair-prophecy'] ? 0.10 : 0) + getRU('legendGold') * 0.05);
+}
+function maybeSpawnLegendBairWave() {
+  if (!S.bought['up-legend-bair']) return;
+  const now = Date.now();
+  if (!S.legendBairNextAt) S.legendBairNextAt = now + getLegendBairCooldownMs();
+  if (now < S.legendBairNextAt) return;
+  S.legendBairNextAt = now + getLegendBairCooldownMs();
+  spawnLegendBairWave();
+  saveGame();
+}
+function spawnLegendBairWave() {
+  const amount = 5 + Math.floor(Math.random() * 6);
+  let remaining = amount;
+  for (let i = 0; i < amount; i++) {
+    setTimeout(() => spawnLegendBair(function(){
+      remaining--;
+      if (remaining <= 0 && getRU('legendAfterglow')) activateBuff(10, 10000);
+    }), i * 160);
+  }
+}
+function spawnLegendBair(done) {
+  const el = document.createElement('div');
+  const golden = Math.random() < getLegendBairGoldenChance();
+  el.className = 'legend-bair' + (golden ? ' golden' : '');
+  el.style.backgroundImage = 'url("' + BAIR_IMG + '")';
+  const side = Math.floor(Math.random() * 4);
+  let x = side === 0 ? -60 : (side === 1 ? window.innerWidth + 60 : Math.random() * window.innerWidth);
+  let y = side === 2 ? -60 : (side === 3 ? window.innerHeight + 60 : Math.random() * window.innerHeight);
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  document.body.appendChild(el);
+  const start = Date.now(), duration = 1400;
+  const startX = x, startY = y;
+  const step = setInterval(() => {
+    const t = Math.min(1, (Date.now() - start) / duration);
+    const center = getSpriteCenter();
+    const nx = startX + (center.cx - startX) * t;
+    const ny = startY + (center.cy - startY) * t;
+    el.style.left = nx + 'px'; el.style.top = ny + 'px';
+    if (getRU('legendCollector') && Math.random() < 0.1) {
+      const sp = document.querySelector('.special-kensinger:not([data-legend-hit])');
+      if (sp) { sp.dataset.legendHit = '1'; collected.add(sp); removeSpecialElement(sp); collectSpecialReward(sp.dataset.type); }
+    }
+    if (t >= 1) {
+      clearInterval(step);
+      el.classList.add('explode');
+      S.kensingers += getLegendBairReward() * (golden ? 3 : 1);
+      setTimeout(() => { if (el.remove) el.remove(); }, 220);
+      updateUI(); saveGame();
+      if (done) done();
+    }
+  }, 33);
 }
 function checkAdkinsPepperonis() {
   if (!getRU('pepperoniMagnet')) return;
@@ -2199,6 +2558,7 @@ function updateBairFloodUI() {
 if (typeof window !== 'undefined') window.addEventListener('resize', syncBairBarrageMeterPosition);
 setInterval(autoTonyFromRebirth, 1000);
 setInterval(function(){ if (getRU('tonyAuto') && tonyEl) for (let i=0;i<3;i++) clickTony(true); }, 1000);
+setInterval(maybeSpawnLegendBairWave, 1000);
 // ═══════════════════════════════════════════════════════════
 //  ADKINS ORBIT
 // ═══════════════════════════════════════════════════════════
@@ -2229,7 +2589,7 @@ function computeRings(total) {
     const inRing = Math.min(fits, remaining);
     rings.push({ radius: r, count: inRing });
     remaining -= inRing;
-    r += (ITEM_SIZE + ITEM_GAP + 2) * (1 + (S.bought['up-adkins-net-1'] ? 0.01 : 0) + (S.bought['up-adkins-net-2'] ? 0.01 : 0));
+    r += (ITEM_SIZE + ITEM_GAP + 2) * (1 + (S.bought['up-adkins-net-1'] ? 0.05 : 0) + (S.bought['up-adkins-net-2'] ? 0.05 : 0));
   }
   return rings;
 }
@@ -2341,14 +2701,20 @@ function buildAdkinsRing(count) {
 function adkinsBatchClick() {
   const count = S.assistantOwned || 0;
   if (count <= 0) return;
-  const cp = getClickPower();
+  const cp = getClickPower() * ((S.kensingers >= 1000000 && (S.trueManualClicks || 0) === 0) ? 1.25 : 1);
   const crits = getAdkinsCritChance() > 0 ? Array.from({ length: count }).reduce(n => n + (Math.random() < getAdkinsCritChance() ? 1 : 0), 0) : 0;
   S.kensingers += (count - crits) * cp + crits * cp * 25;
   if (S.officeOwned > 0) {
     let chance = 1 - Math.pow(1 - (S.officeOwned * 0.001 * getBairBarrageMult() * (S.bought['up-apocalypse'] ? 0.5 : 1)), count);
     if (Math.random() < chance) spawnSpecial('gold');
   }
-  if (adkinsData.length) doClickAnim(adkinsData[Math.floor(Math.random() * adkinsData.length)].img);
+  if (adkinsData.length) {
+    const visualClicks = Math.min(12, adkinsData.length);
+    for (let i = 0; i < visualClicks; i++) {
+      const idx = (Math.floor(Math.random() * adkinsData.length) + i * 7) % adkinsData.length;
+      doClickAnim(adkinsData[idx].img);
+    }
+  }
   updateUI(); saveGame();
 }
 
@@ -2484,6 +2850,7 @@ function startCropDrag(event, typeId) {
   updateDevModeUI();
   renderRebirthUI();
   updateBairFloodUI();
+  updateAdminAutoClickerUI();
 }
 function selectCrop(typeId) {
   if (!canUseCrop(typeId)) { showFarmNotice('Unlock that crop through recipes first.'); return; }
@@ -2512,15 +2879,16 @@ function plantCropAt(index) {
     showFarmNotice('Finish the current Sword Bloom effect first.'); return;
   }
   const planted = { id: now + '-' + Math.random().toString(16).slice(2), type: typeId, plantedAt: now, growTicksRequired: getCropGrowTicks(crop), growTicksDone: 0, plot: index, freeSpawn: false };
+  const freePlant = (S.freeCropCredits || 0) > 0;
   if (crop.rewardSeconds) {
     planted.cost = Math.floor(basis * crop.costSeconds);
     planted.reward = Math.floor(basis * crop.rewardSeconds);
-    if (S.kensingers < planted.cost) { showFarmNotice('Not enough Kensingers for that crop.'); return; }
-    S.kensingers -= planted.cost;
+    if (!freePlant && S.kensingers < planted.cost) { showFarmNotice('Not enough Kensingers for that crop.'); return; }
+    if (!freePlant) S.kensingers -= planted.cost;
   } else if (typeId === 'kensingerCarrot') {
     planted.cost = Math.floor(basis * crop.costSeconds);
-    if (S.kensingers < planted.cost) { showFarmNotice('Not enough Kensingers for that crop.'); return; }
-    S.kensingers -= planted.cost;
+    if (!freePlant && S.kensingers < planted.cost) { showFarmNotice('Not enough Kensingers for that crop.'); return; }
+    if (!freePlant) S.kensingers -= planted.cost;
     S.buffs.specialBlockUntil = Math.max(S.buffs.specialBlockUntil || 0, now + 120000);
   } else if (typeId === 'swordBloom') {
     S.buffs.cpsPenaltyUntil = now + crop.penaltyMs;
@@ -2781,6 +3149,7 @@ function updateScoreUI() {
   document.getElementById('count').textContent = formatBigNumber(S.kensingers, true);
   const notice = document.getElementById('multiplier-notice');
   const permNotice = document.getElementById('perm-multiplier-notice');
+  const manualNotice = document.getElementById('manual-click-power-notice');
   const tm = getTemporaryMult();
   const pm = getTotalPermanentMult();
   if (tm > 1) {
@@ -2796,6 +3165,12 @@ function updateScoreUI() {
     permNotice.style.color = '#7c4dff';
   } else {
     permNotice.style.display = 'none';
+  }
+  if (freePlant) { S.freeCropCredits = Math.max(0, (S.freeCropCredits || 0) - 1); planted.freeCodePlant = true; }
+  if (manualNotice) {
+    const manualMult = getManualClickRebirthMult();
+    manualNotice.style.display = manualMult > 1 ? 'block' : 'none';
+    manualNotice.textContent = 'Manual Click Power: ' + formatStat(manualMult) + 'x';
   }
 }
 
@@ -2869,16 +3244,16 @@ function updateShopBtn(type, base, owned, k, cap) {
   if (cap && owned >= cap) {
     btn.disabled = true;
     btn.classList.add('maxed');
-    btn.style.order = 999999999;
+    btn.style.order = 2147483647;
     document.getElementById('price-' + type).textContent = 'MAXED';
     return;
   }
   base = getEffectiveBasePrice(type, base);
-  let preview = buyMode === 'all' ? getMaxAffordable(base, owned, k) : buyMode;
+  let preview = buyMode === 'all' ? getShopMaxAffordable(type, base, owned, k) : buyMode;
   if (cap) preview = Math.min(preview, cap - owned);
   const displayAmount = Math.max(1, preview);
-  const cost = getBulkCost(base, owned, displayAmount);
-  const requiredCost = buyMode === 'all' ? getBulkCost(base, owned, 1) : cost;
+  const cost = getShopBulkCost(type, base, owned, displayAmount);
+  const requiredCost = buyMode === 'all' ? getShopBulkCost(type, base, owned, 1) : cost;
   document.getElementById('price-' + type).textContent = formatPrice(cost);
   btn.disabled = (k < requiredCost || preview <= 0);
 }
@@ -2888,6 +3263,7 @@ function updateUpgradesUI() {
   UPGRADES.forEach(up => {
     const btn = document.getElementById(up.id);
     if (!btn) return;
+    if (up.id === 'up-bair-banking' && getRU('permaBanking')) { btn.style.display = 'none'; return; }
     if (S.bought[up.id]) { btn.style.display = 'none'; return; }
     if (k >= up.showAt || S.seen[up.id]) {
       btn.style.display = 'flex';
@@ -2978,13 +3354,13 @@ function dismissSaveHint() {
       <h3>🆕 What's New</h3>
       <button class="notice-x" onclick="dismissUpdate()">×</button>
     </div>
-    <p class="ver-tag">Version 2.0.0 — May 2026</p>
+    <p class="ver-tag">Version 2.2.0 - May 13th 2026</p>
     <ul>
-      <li>Saving is in Settings.</li>
-      <li>Permanent multipliers now have their own live readout.</li>
-      <li>Farm timers now grow correctly.</li>
-      <li>Added Kevin Bair buyables and Bair Banking.</li>
-      <li>Added Rebirths and permanent upgrades.</li>
+      <li>Fixed rebirth tree spacing, buying, and Buy All.</li>
+      <li>Added late-game Bair, CPS, banking, and pepperoni upgrades.</li>
+      <li>Added admin autoclicker code aliases.</li>
+      <li>Added Quintillion and Sextillion number labels.</li>
+      <li>Balanced Retainment, Tony Town, Adkins Web, and first Auto-Kensinger.</li>
     </ul>
   </div>
 </div>
@@ -2992,5 +3368,4 @@ function dismissSaveHint() {
 </html>
 <!-- Bair Flood fix: preserve original HTML length and behavior -->
    
-
 
